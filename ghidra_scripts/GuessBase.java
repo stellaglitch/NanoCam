@@ -3,7 +3,7 @@
 // loaded at the wrong base, those pointers land outside it. This script collects every
 // literal-pool value, then scores candidate bases by how many values would then point at
 // the start of a string in the image.
-//@category iPodCamera
+//@category NanoCam
 
 import java.util.*;
 

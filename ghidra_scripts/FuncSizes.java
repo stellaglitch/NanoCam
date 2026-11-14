@@ -2,7 +2,7 @@
 // size and any callers that are outside the listed set. Used to measure how much code a
 // feature owns.
 // Headless usage: -postScript FuncSizes.java <path to address list>
-//@category iPodCamera
+//@category NanoCam
 
 import ghidra.app.script.GhidraScript;
 import ghidra.program.model.address.Address;

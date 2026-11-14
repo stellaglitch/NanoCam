@@ -2,7 +2,7 @@
 // Ghidra sometimes decides a function never returns (e.g. an allocator that can panic),
 // then stops disassembling after every call to it. That truncates the callers.
 // Headless usage (not -readOnly, so the fix is saved): -postScript FixNoReturn.java <hex address> ...
-//@category iPodCamera
+//@category NanoCam
 
 import ghidra.app.script.GhidraScript;
 import ghidra.program.model.address.Address;

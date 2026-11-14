@@ -1,6 +1,6 @@
 // Reports which functions reference the camera-related strings in RetailOS.
 // Run headless with -postScript CameraXrefs.java, or from Ghidra's Script Manager.
-//@category iPodCamera
+//@category NanoCam
 
 import ghidra.app.script.GhidraScript;
 import ghidra.program.model.address.Address;

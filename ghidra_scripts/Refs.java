@@ -1,6 +1,6 @@
 // Lists every reference to the given addresses, with the containing function.
 // Headless usage: -postScript Refs.java <hex address> [<hex address> ...]
-//@category iPodCamera
+//@category NanoCam
 
 import ghidra.app.script.GhidraScript;
 import ghidra.program.model.address.Address;

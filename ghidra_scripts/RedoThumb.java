@@ -1,7 +1,7 @@
 // Re-disassembles an address range as Thumb, for code Ghidra wrongly decoded as ARM.
 // Headless usage: -postScript RedoThumb.java <hex start> <hex end>
 // Combine with -readOnly and a following -postScript Decompile.java to try it without saving.
-//@category iPodCamera
+//@category NanoCam
 
 import java.math.BigInteger;
 

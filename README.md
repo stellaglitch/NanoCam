@@ -1,4 +1,4 @@
-# iPodCamera
+# NanoCam
 
 A "Photo Camera" mode for the iPod nano 5th generation, added to Apple's stock
 firmware next to the built-in "Video Camera". The stock firmware only records
@@ -40,7 +40,7 @@ Everything except actually sending code to the iPod can be done on Windows.
 2. Copy this project to the Pi from Windows:
 
    ```bash
-   scp -r C:\Users\marsh\Dropbox\VSCode\iPodCamera pi@raspberrypi.local:~/iPodCamera
+   scp -r C:\Users\marsh\Dropbox\VSCode\iPodCamera pi@raspberrypi.local:~/NanoCam
    ```
 
 3. SSH in and run the setup script. It installs Go 1.23, builds wInd3x, adds a
@@ -51,7 +51,7 @@ Everything except actually sending code to the iPod can be done on Windows.
    ```
 
    ```bash
-   cd ~/iPodCamera && bash scripts/pi-setup.sh
+   cd ~/NanoCam && bash scripts/pi-setup.sh
    ```
 
 4. Plug the nano into one of the Pi's USB ports (not through a hub if you can

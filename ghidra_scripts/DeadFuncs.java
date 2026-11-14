@@ -1,7 +1,7 @@
 // Lists functions that nothing references (no calls, no data pointers), largest first.
 // Candidates for reuse as code space; double-check each with a raw byte scan.
 // Headless usage: -postScript DeadFuncs.java [min size, default 256]
-//@category iPodCamera
+//@category NanoCam
 
 import ghidra.app.script.GhidraScript;
 import ghidra.program.model.address.Address;

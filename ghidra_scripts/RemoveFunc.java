@@ -1,7 +1,7 @@
 // Removes wrongly-created function definitions (e.g. a mid-function block Ghidra
 // split off), so the real enclosing function decompiles as one piece.
 // Headless usage (not -readOnly, so the change is saved): -postScript RemoveFunc.java <hex address> ...
-//@category iPodCamera
+//@category NanoCam
 
 import ghidra.app.script.GhidraScript;
 import ghidra.program.model.listing.Function;

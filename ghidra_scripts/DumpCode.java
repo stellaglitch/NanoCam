@@ -1,6 +1,6 @@
 // Prints instructions starting at an address, with the values of any literal-pool loads.
 // Headless usage: -postScript DumpCode.java <hex address> <instruction count>
-//@category iPodCamera
+//@category NanoCam
 
 import ghidra.app.script.GhidraScript;
 import ghidra.program.model.address.Address;

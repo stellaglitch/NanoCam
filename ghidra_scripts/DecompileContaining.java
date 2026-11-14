@@ -1,6 +1,6 @@
 // Decompiles the function that contains each given address (not just one starting there).
 // Headless usage: -postScript DecompileContaining.java <hex address> ...
-//@category iPodCamera
+//@category NanoCam
 
 import ghidra.app.decompiler.DecompInterface;
 import ghidra.app.decompiler.DecompileResults;

@@ -2,7 +2,7 @@
 // Headless usage: -postScript Decompile.java <hex address> [<hex address> ...]
 // An address inside a function decompiles the whole function. If no function exists
 // there yet, one is created. Add a "t" suffix (e.g. 0809c478t) to disassemble it as Thumb.
-//@category iPodCamera
+//@category NanoCam
 
 import ghidra.app.decompiler.DecompInterface;
 import ghidra.app.decompiler.DecompileResults;

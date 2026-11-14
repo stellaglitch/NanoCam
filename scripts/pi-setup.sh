@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Set up a Raspberry Pi (Raspberry Pi OS / Debian) to run wInd3x and nanocam.
-# Run from the iPodCamera folder on the Pi:  bash scripts/pi-setup.sh
+# Run from the NanoCam folder on the Pi:  bash scripts/pi-setup.sh
 # Or copy just this file and run it anywhere: it then installs only wInd3x.
 set -euo pipefail
 
