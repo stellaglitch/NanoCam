@@ -1,0 +1,20 @@
+[project]
+name = "nanocam"
+version = "0.1.0"
+description = "Host-side tools for a still-photo camera app on the iPod nano 5G"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+usb = ["pyusb>=1.2", "libusb-package>=1.0; sys_platform == 'win32'"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+nanocam = "nanocam.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["nanocam"]
