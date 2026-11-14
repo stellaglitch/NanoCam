@@ -40,7 +40,7 @@ Everything except actually sending code to the iPod can be done on Windows.
 2. Copy this project to the Pi from Windows:
 
    ```bash
-   scp -r C:\Users\marsh\Dropbox\VSCode\iPodCamera pi@raspberrypi.local:~/NanoCam
+   scp -r C:\Users\marsh\Dropbox\VSCode\NanoCam pi@raspberrypi.local:~/NanoCam
    ```
 
 3. SSH in and run the setup script. It installs Go 1.23, builds wInd3x, adds a

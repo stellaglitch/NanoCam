@@ -38,7 +38,7 @@ UI text (e.g. "Video Camera") and `controller.*` names have **no direct
 pointers** even at the right base. They're probably looked up by ID or hash
 through a string table. The `*Thread` names are loaded with PC-relative `adr`.
 
-Ghidra project: `C:\Users\marsh\ghidra-projects\iPodCamera`, program
+Ghidra project: `C:\Users\marsh\ghidra-projects\NanoCam`, program
 `n5g-retailos.dec`. It holds the main OS at 0x08000000 (ARM:LE:32:v5t). The early
 boot image isn't imported yet. Scripts are in `ghidra_scripts/`.
 
@@ -1525,7 +1525,7 @@ Portrait upright and upside down were confirmed on the iPod (section 32). This a
   the "real" upright.
 - Built `firmware/n5g-photos-slot200.dfu` (17 patches, `photos_slot.py ... 200 0`), 29 tests pass.
   Not tested on the iPod yet.
-- Tooling note: the project moved to `C:\Users\marsh\Dropbox\Coding_Projects\iPodCamera`.
+- Tooling note: the project moved to `C:\Users\marsh\Dropbox\Coding_Projects\NanoCam`.
 
 ## 34. Dark Mode toggle (replaces Settings > General > Rotate)
 
