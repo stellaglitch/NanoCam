@@ -22,13 +22,13 @@ goal, once disassembling RetailOS has shown us how the sensor is driven.
 | On-device code (patches, payloads) | ARM assembly / C | the iPod |
 | Disassembly | [Ghidra](https://ghidra-sre.org/) | Windows |
 
-## The Linux requirement
+## Linux is Required
 
 wInd3x's nano 4G/5G exploit **only works on native Linux. It fails in a VM,
-which includes WSL2.** Options:
+which includes WSL2.** Your options are:
 
-- A Raspberry Pi (the wInd3x authors' suggestion), or
-- booting a Linux live USB (e.g. Ubuntu) on this PC.
+- A Raspberry Pi (the wInd3x authors' suggestion, and what I used), or
+- booting a Linux live USB (e.g. Ubuntu) on your PC.
 
 Everything except actually sending code to the iPod can be done on Windows.
 
@@ -36,7 +36,7 @@ Everything except actually sending code to the iPod can be done on Windows.
 
 1. Flash **Raspberry Pi OS** with Raspberry Pi Imager. In its settings, turn on
    SSH and set a username and Wi-Fi.
-2. Copy this project to the Pi from Windows:
+2. Copy this project to the Pi from Windows (Or transfer via USB Drive):
 
    ```bash
    scp -r C:\Users\marsh\Dropbox\VSCode\NanoCam pi@raspberrypi.local:~/NanoCam
@@ -87,10 +87,10 @@ Replace `pi` with the username you chose in step 1.
 
    *Done: the menu shows "Photo Camera", and the camera still works.*
 7. **Add a "Photo Camera" menu item** next to "Video Camera" in the main menu.
-   At first it can just open the existing video camera screen.
+   For now it's visually identical to the existing video camera screen.
    *Done: `patches/photo_camera_menu.py` repurposes the hidden Composers item.
    Enable it in Settings → Main Menu.*
-8. **Still capture.** In Photo Camera mode, make the center button grab the
+8. **Still capture.** In Photo Camera mode, the center button captures the
    current viewfinder frame instead of starting a recording. Encode it to JPEG
    or BMP and save it where the stock Photos app can show it.
 9. **Make it permanent.** `cfw run` is tethered: the patched OS only runs
@@ -148,9 +148,10 @@ python -m nanocam wrap payload.bin payload.dfu
 
 Haxed DFU only lasts until the next reboot, and `cfw run` doesn't write to
 flash, so experiments are tethered and mostly reversible. Work on spare units
-anyway, and don't write anything to NOR flash until you understand it.
+anyway, and don't write anything to NOR flash until you understand it. I've tested
+this on multiple of my nano 5gs and haven't had any issues, but proceed with caution.
 
 ## Resources
 
-- freemyipod wiki: https://freemyipod.org/wiki/ (IMG1 format, nano 5G status)
+- wInd3x/freemyipod wiki: https://freemyipod.org/wiki/ (IMG1 format, nano 5G status)
 - `#freemyipod` on libera.chat IRC
