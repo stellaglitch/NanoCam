@@ -2,18 +2,37 @@
 
 A proper photo camera mode for the iPod nano 5th generation, added to Apple's stock
 firmware. With the ability to view photos taken on the pod through the native Photos app!
+I've also been developing a nano 5g dark mode which is included in this build. 
 
-## How this works
+## How This Works
 
 The nano 5G only boots Apple-signed code. The
 [wInd3x](https://github.com/freemyipod/wInd3x) exploit (freemyipod project)
-uses a bug in the bootrom's DFU mode to run unsigned code. Its `cfw run`
-command can boot a **modified copy of Apple's own firmware (RetailOS)**.
+uses a bug in the bootrom's DFU mode to run unsigned code. This allows us to
+boot a modified copy of Apple's own firmware (RetailOS) with extra features added.
 
-That shapes the plan. RetailOS already contains a working camera driver and a
-video recorder. It's much easier to patch in a "save this frame" feature than
-to write a camera driver from scratch. Writing our own driver stays a later
-goal, once disassembling RetailOS has shown us how the sensor is driven.
+RetailOS already contains a working camera driver and a video recorder. 
+It was much easier to patch in a "save this frame" feature than
+to write a new camera driver from scratch. Because of this, the camera
+viewfinder looks identical to the video mode, despite it functioning differently. 
+
+When I started this project I always envisioned being able to view your photos directly
+on the iPod after taking them. I consider this to be an essential feature of any good
+digital camera and wanted to be sure it got added. My first hurdle was figuring out how to 
+add photos to the native "Photos" app already included on the iPod. The only way to add 
+photos to the iPod is through syncing with iTunes, which isn't practical. 
+
+After some tinkering I figured out a duct-taped together solution of using placeholder 
+images. The concept behind it is to sync a batch of hundreds to thousands of empty 
+placeholder images onto the iPod, which the camera app then overwrites one by one as you 
+take photos, allowing you to view your pictures instantly within the device, and bypassing 
+the photos app iTunes sync limitation. 
+
+After capturing an image using the center clickwheel button the Pictures are saved 
+as JPEG to the internal storage as separately numbered files, just like the video app. 
+The photos are saved at a blistering 0.3mp at 480x640 resolution which comes out to around 
+~100-150kb per photo. This means you can take an estimated 100,000+ photos on a 16gb 
+nano with 10gb of space available, truly impressive.
 
 | Piece | Language | Runs on |
 |---|---|---|
@@ -62,42 +81,6 @@ Everything except actually sending code to the iPod can be done on Windows.
 
 Replace `pi` with the username you chose in step 1.
 
-## Roadmap
-
-1. **Setup.** Install Python, Ghidra, and a Linux box with wInd3x built
-   (`go build ./cmd/wInd3x`).
-2. **First contact.** Put a spare nano in DFU mode (hold Menu+Select through
-   two reboots until it appears as "USB DFU Device"), run `nanocam detect`,
-   then `wInd3x haxdfu`.
-3. **Get the firmware.** On Linux: `wInd3x download retailos n5g-retailos.bin`,
-   then `wInd3x decrypt n5g-retailos.bin n5g-retailos.dec`.
-   Check it here with `nanocam info`.
-4. **Prove the boot path.** Run the *unmodified* decrypted RetailOS with
-   `wInd3x cfw run n5g-retailos.dec`. The iPod should boot normally.
-   *Done: it boots, and Video Camera works.*
-5. **Find the camera code.** Load the firmware into Ghidra (ARM little-endian).
-   Look for camera UI strings, the video encoder, and I2C writes to the
-   sensor. Write down addresses in `docs/`.
-6. **First patch.** Make a visible, harmless change (such as a UI string) with a
-   Python patch script, then boot it. This proves the patch-and-boot loop works:
-
-   ```bash
-   python -m nanocam patch firmware\n5g-retailos.dec firmware\n5g-photocam-rename.dfu --string "Video Camera" "Photo Camera"
-   ```
-
-   *Done: the menu shows "Photo Camera", and the camera still works.*
-7. **Add a "Photo Camera" menu item** next to "Video Camera" in the main menu.
-   For now it's visually identical to the existing video camera screen.
-   *Done: `patches/photo_camera_menu.py` repurposes the hidden Composers item.
-   Enable it in Settings → Main Menu.*
-8. **Still capture.** In Photo Camera mode, the center button captures the
-   current viewfinder frame instead of starting a recording. Encode it to JPEG
-   or BMP and save it where the stock Photos app can show it.
-9. **Make it permanent.** `cfw run` is tethered: the patched OS only runs
-   when booted from the Pi, and a normal reboot brings back stock firmware.
-   Freemyipod lists no untethered method for the nano 5G yet. So this step is
-   research into whether a patched OS can be made to survive a reboot.
-10. **Stretch goals:** filters, a self-timer, and our own camera driver.
 
 ## Setup (Windows)
 
@@ -153,5 +136,5 @@ this on multiple of my nano 5gs and haven't had any issues, but proceed with cau
 
 ## Resources
 
-- wInd3x/freemyipod wiki: https://freemyipod.org/wiki/ (IMG1 format, nano 5G status)
-- `#freemyipod` on libera.chat IRC
+- wInd3x/freemyipod wiki: https://freemyipod.org/wiki/
+- [Ghidra by the NSA](https://github.com/nationalsecurityagency/ghidra) 
