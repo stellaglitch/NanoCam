@@ -31,20 +31,11 @@ the photos app iTunes sync limitation.
 After capturing an image using the center clickwheel button the Pictures are saved 
 as JPEG to the internal storage as separately numbered files, just like the video app. 
 The photos are saved at a blistering 0.3mp at 480x640 resolution which comes out to around 
-~100-150kb per photo. This means you can take an estimated 100,000+ photos on a 16gb 
-nano with 10gb of space available, truly impressive.
-
-| Piece | Language | Runs on |
-|---|---|---|
-| `nanocam` toolkit (firmware parsing, patching, USB) | Python | Windows or Linux |
-| Exploit and boot (`wInd3x`) | Go (existing tool) | **Native Linux only** |
-| On-device code (patches, payloads) | ARM assembly / C | the iPod |
-| Disassembly | [Ghidra](https://ghidra-sre.org/) | Windows |
+~100-150kb per photo. 
 
 ## Linux is Required
 
-wInd3x's nano 4G/5G exploit **only works on native Linux. It fails in a VM,
-which includes WSL2.** Your options are:
+wInd3x's nano 4G/5G exploit only works on native Linux. Your options are:
 
 - A Raspberry Pi (the wInd3x authors' suggestion, and what I used), or
 - booting a Linux live USB (e.g. Ubuntu) on your PC.
