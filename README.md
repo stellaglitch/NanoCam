@@ -35,7 +35,7 @@ The photos are saved at a blistering 0.3mp at 480x640 resolution which comes out
 
 ## Linux is Required
 
-wInd3x's nano 4G/5G exploit only works on native Linux. Your options are:
+wInd3x's nano 5G exploit only works on native Linux. Your options are:
 
 - A Raspberry Pi (the wInd3x authors' suggestion, and what I used), or
 - booting a Linux live USB (e.g. Ubuntu) on your PC.
