@@ -349,11 +349,19 @@ def build_writer(base: int, pix: dict[str, int], helpers: dict[str, int], slots:
     s(t.adds_reg(2, 0, 7)); s(t.ldrb(2, 2, NUM_AT)); s(t.subs_imm(2, 48))
     s(t.movs_imm(3, 10)); s(t.muls(4, 3)); s(t.adds_reg(4, 4, 2))
     s(t.adds_imm(7, 1)); s(t.cmp_imm(7, 4)); R(2, lambda a, L: t.bcond("lt", a, L["digit"]))
-    if offset:
-        s(t.adds_imm(4, offset))                          # so the next photo lands in slot 0
-    s("mod")
-    s(t.cmp_imm(4, slots)); R(2, lambda a, L: t.bcond("lt", a, L["mod_done"]))
-    s(t.subs_imm(4, slots)); R(2, lambda a, L: t.b(a, L["mod"]))
+    if slots <= 255:                                      # 8-bit immediates
+        if offset:
+            s(t.adds_imm(4, offset))                      # so the next photo lands in slot 0
+        s("mod")
+        s(t.cmp_imm(4, slots)); R(2, lambda a, L: t.bcond("lt", a, L["mod_done"]))
+        s(t.subs_imm(4, slots)); R(2, lambda a, L: t.b(a, L["mod"]))
+    else:                                                 # 500, 1000 ...: from literals (r3 is free here)
+        if offset:
+            R(2, lambda a, L: t.ldr_pc(a, 3, L["k_offset"])); s(t.adds_reg(4, 4, 3))
+        R(2, lambda a, L: t.ldr_pc(a, 3, L["k_slots"]))
+        s("mod")
+        s(t.cmp_reg(4, 3)); R(2, lambda a, L: t.bcond("lt", a, L["mod_done"]))
+        s(t.subs_reg(4, 4, 3)); R(2, lambda a, L: t.b(a, L["mod"]))
     s("mod_done")
     s(t.str_sp(4, SLOT))
     # zero the row buffer (the black bars stay zero)
@@ -413,6 +421,9 @@ def build_writer(base: int, pix: dict[str, int], helpers: dict[str, int], slots:
     s("k288"); s(struct.pack("<I", 288))
     s("k384"); s(struct.pack("<I", 384))
     s("k768"); s(struct.pack("<I", 768))
+    if slots > 255:
+        s("k_slots"); s(struct.pack("<I", slots))
+        s("k_offset"); s(struct.pack("<I", offset))
 
     return s.build()
 
@@ -423,8 +434,9 @@ def default_offset(slots: int, next_number: int) -> int:
 
 
 def build(slots: int = 10, offset: int = 0):
-    if not (1 <= slots <= 255 and 0 <= offset < slots):
-        raise ValueError("slots must be 1..255 and offset < slots (Thumb 8-bit immediates)")
+    # PIC numbers have 4 digits, so more than 10000 slots would never all be used
+    if not (1 <= slots <= 10000 and 0 <= offset < slots):
+        raise ValueError("slots must be 1..10000 and offset < slots")
     pcode, pl = build_pix(REGION_B[0])
     hcode, hl = build_helpers(REGION_C[0], pl)
     ecode, el = build_exif(REGION_D[0], hl)

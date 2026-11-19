@@ -1769,3 +1769,9 @@ Result on the iPod with Dark Mode on: every row dark grey, song titles and times
   - The "blue gradient behind the album title" (header of the flip side) is not: COLR 0x42 (tint of the view's first image), the view's second image element (colour id 0 -> 0x43), the six inline ARGB colours of the `list` element after the first two (+0x314..+0x328 of View 0x14cd/14ce are the selection bar's edges and unused colours; +0x30c/+0x310 are the selection gradient), nor bitmap 0x0dad01a7 (the only wide blue bitmap in the image DB). The three `imag` elements of the view all use SORC 0xaf (bitmap 0x0dad0990, which is not in SilverImagesDB), probably a runtime-assigned texture. Unsolved.
 - Testing note: copy each test file to the Pi under its own name and compare `sha256sum`; for a while the same file was flashed under several names, which made the experiments meaningless.
 - tests/emulate_row_painter.py runs the real painter in Unicorn with the callees stubbed (colours, stack balance, registers, sp alignment, odd/even and selected rows).
+
+### 34m. 500 and 1000 placeholder slots (2026-11-19)
+
+- `photos_slot.py` now accepts 1..10000 slots. Up to 255 the slot count and offset are Thumb immediates (output unchanged); above that WRITE_SLOTS loads them from two literals (r3 is free there). The writer is 236 of 334 bytes at 500/1000 slots.
+- Emulated with tests/emulate_photos_slot.py for 200, 500 and 1000 slots: slots and seek offsets match (e.g. 1000 slots, PIC_0031 with next=2999 -> slot 32, F1087 at 0x900000, F1066 at 0x40000). Needs `pip install numpy pillow unicorn`. Not tested on the iPod with more than 200 slots.
+- Placeholder sets are in placeholders/200, /500 (slot_001..500.jpg) and /1000 (slot_0001..1000.jpg): all the same 651-byte black 30x40 JPEG.
