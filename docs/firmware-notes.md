@@ -1,4 +1,4 @@
-# RetailOS firmware notes (nano 5G)
+﻿# RetailOS firmware notes (nano 5G)
 
 Offsets are into the IMG1 **body** of `firmware/n5g-retailos.dec`, as printed by
 `python -m nanocam strings`. Body size is 0x6f2640 bytes.
@@ -19,8 +19,8 @@ The body holds **two images back to back**:
 
 | Body offset | File offset | Loads at | What |
 |---|---|---|---|
-| 0x0 – 0x2e27b | 0x600 | **0x22000000** | Early boot: vector table, SoC init, MPU setup, idle loop |
-| 0x2e27c – end | 0x2e87c | **0x08000000** | Main OS. Starts with a `hibe` header |
+| 0x0 â€“ 0x2e27b | 0x600 | **0x22000000** | Early boot: vector table, SoC init, MPU setup, idle loop |
+| 0x2e27c â€“ end | 0x2e87c | **0x08000000** | Main OS. Starts with a `hibe` header |
 
 How we know:
 
@@ -28,7 +28,7 @@ How we know:
   result with a stored constant 0x22007060, which is its own linked address.
   The stack is 0x2200ffdc.
 - **Main OS:** an exact vote over 400 long strings against every pointer-like
-  value in 0x08000000–0x0a000000 gave address = body offset + 0x07fd1d84
+  value in 0x08000000â€“0x0a000000 gave address = body offset + 0x07fd1d84
   for 152 of the 400 strings. The runner-up got 25. So body 0x2e27c is
   0x08000000.
 - To convert: `address = body_offset + 0x07fd1d84` (main OS), or
@@ -47,11 +47,11 @@ boot image isn't imported yet. Scripts are in `ghidra_scripts/`.
 | Image | Result |
 |---|---|
 | `n5g-retailos.dec`, unmodified, via `wInd3x cfw run` | Boots to the main menu; Video Camera works |
-| `n5g-photocam-rename.dfu`: the 3 copies of "Video Camera" → "Photo Camera" | Main menu shows "Photo Camera"; camera still works |
-| `n5g-photocam-menu.dfu`: Composers cell → "Photo Camera" opening the camera (`patches/photo_camera_menu.py`) | Works: "Photo Camera" shows in the main menu and opens the camera |
-| `n5g-jpeg-test.dfu` v1: capture constants 7/0xd → 0x27/0x2d | Ran normally, no .jpg. The constants were buffer limits, not flags. |
+| `n5g-photocam-rename.dfu`: the 3 copies of "Video Camera" â†’ "Photo Camera" | Main menu shows "Photo Camera"; camera still works |
+| `n5g-photocam-menu.dfu`: Composers cell â†’ "Photo Camera" opening the camera (`patches/photo_camera_menu.py`) | Works: "Photo Camera" shows in the main menu and opens the camera |
+| `n5g-jpeg-test.dfu` v1: capture constants 7/0xd â†’ 0x27/0x2d | Ran normally, no .jpg. The constants were buffer limits, not flags. |
 | `n5g-jpeg-test.dfu` v2 (now `n5g-jpeg-stage3.dfu`): JPEG-path checks test 0x1 instead of 0x20 | White screen and reboot on opening Photo Camera: frames reached the encoder without a file path (assert in `FUN_0811ad10`) |
-| `n5g-take-photo.dfu`: center button → TakePhoto (`patches/take_photo.py`) | not tested yet |
+| `n5g-take-photo.dfu`: center button â†’ TakePhoto (`patches/take_photo.py`) | not tested yet |
 
 So RetailOS has **no integrity check** on its own code or data, and the menu
 label comes from one of these three strings, not a separate resource file.
@@ -62,7 +62,7 @@ label comes from one of these three strings, not a separate resource file.
 |---|---|---|
 | **0x627f1c** | iPod, Music, TV Shows, Podcasts, iTunes U, *Video Camera*, Photos, Videos, Extras, Speakers, Radio, Settings, Shuffle Songs, Now Playing, **Test Menu Item (has no ID)**, Cover Flow, ... | **Main-menu item labels** |
 | 0x6295c8 | Camera Roll, Camera Videos, All Unsynced Videos, "Delete all camera videos from your iPod?" | Camera app screens |
-| 0x62a8a8 | TV UI, then Artists, Albums, Songs, ... Camera Videos | Probably Settings → Main Menu toggles |
+| 0x62a8a8 | TV UI, then Artists, Albums, Songs, ... Camera Videos | Probably Settings â†’ Main Menu toggles |
 
 Strings in these pools are 4-byte aligned and NUL-padded. **Nothing points at
 them directly**, whichever base address you assume. These searches all came up
@@ -72,7 +72,7 @@ empty:
 - a table of offsets measured from the "iPod" label
 
 "Test Menu Item (has no ID)" suggests labels are looked up by a **menu item
-ID**. Most likely there's an ID → string index table in a different order, or
+ID**. Most likely there's an ID â†’ string index table in a different order, or
 string lookup by index counting through the pool.
 
 ## Camera app
@@ -135,14 +135,14 @@ threads and load the shutter sound.
 `FUN_0809c478` (Thumb) builds the whole camera pipeline and saves it in a global
 singleton at `0x086ba368`. Ghidra hadn't found it as a function at first. It:
 
-1. Creates four buffer queues (`FUN_082251e0(…, 0x11)`): q3, q4, q5, q6.
+1. Creates four buffer queues (`FUN_082251e0(â€¦, 0x11)`): q3, q4, q5, q6.
 2. Gets the camera device (`func_0x080b5f80`) and configures it through vtable
-   +8 with **640 × 480, stride 640**. If that fails, no stages are built.
+   +8 with **640 Ã— 480, stride 640**. If that fails, no stages are built.
 3. Builds five stages, each with its own thread:
 
 ```
-camera ─► GKImageCaptureThread ─► q3 ─► GKImagePreprocessStage1Thread ─┬─► q4 ─► FUN_080bb61c (likely video encoder)
-          FUN_080bc3f8                  FUN_080c1d30 (splitter)         └─► q5 ─► JPEGPreprocessThread ─► q6 ─► JPEGEncodeThread
+camera â”€â–º GKImageCaptureThread â”€â–º q3 â”€â–º GKImagePreprocessStage1Thread â”€â”¬â”€â–º q4 â”€â–º FUN_080bb61c (likely video encoder)
+          FUN_080bc3f8                  FUN_080c1d30 (splitter)         â””â”€â–º q5 â”€â–º JPEGPreprocessThread â”€â–º q6 â”€â–º JPEGEncodeThread
                                                                                 FUN_080bc4a0                     FUN_080b8520
 ```
 
@@ -151,12 +151,12 @@ camera ─► GKImageCaptureThread ─► q3 ─► GKImagePreprocessStage1Threa
 | Capture | `FUN_080bc3f8` | `FUN_080edc00` | Pulls frames from the device (vtable +0x28), tags them 7 or 0xd, pushes to q3. Flag 0x10 = end of stream |
 | Splitter | `FUN_080c1d30` | ? | `GKImagePreprocessStage1Thread`. Builds another sub-stage `func_0x080dc704` |
 | Video (?) | `FUN_080bb61c` | ? | Reads q4 |
-| JPEG preprocess | `FUN_080bc4a0` | `FUN_080edd8c` | Kind 1 = image buffer (converted); kind 2 = a 0–20 level value |
+| JPEG preprocess | `FUN_080bc4a0` | `FUN_080edd8c` | Kind 1 = image buffer (converted); kind 2 = a 0â€“20 level value |
 | JPEG encode | `FUN_080b8520` | `FUN_080ea028` | Encodes buffers flagged 0x20 via `FUN_080f533c` |
 
 **`FUN_080f533c` writes a `.jpg` file.** It builds a path (`FUN_0810a2da`) into
 a 1 KB buffer, appends `".jpg"` (0x080f5628), checks free space
-(`FUN_0826b8ca(0)` against 0x400), and allocates a width × height buffer. So
+(`FUN_0826b8ca(0)` against 0x400), and allocates a width Ã— height buffer. So
 the stock firmware can already turn camera frames into JPEG files.
 
 **Still unknown:** whether these JPEGs are full photos or only Camera Roll
@@ -180,7 +180,7 @@ data that refer to named symbols. Code handles events by comparing names
 with `strcmp`.
 
 ### 1. Per-item event methods
-Small Thumb functions around 0x080dcbb4–0x080de494. Each one posts a named
+Small Thumb functions around 0x080dcbb4â€“0x080de494. Each one posts a named
 event, with the name stored inline right after the function, loaded by `adr`:
 
 | Method | Posts |
@@ -190,18 +190,18 @@ event, with the name stored inline right after the function, loaded by `adr`:
 | 0x080dd210 | `PhotosSelected` |
 | 0x080dd364 | `VideosSelected` |
 
-The body is roughly `this->vtable[0x1c/4+…](this, "CameraSelected")`, i.e.
+The body is roughly `this->vtable[0x1c/4+â€¦](this, "CameraSelected")`, i.e.
 post event by name. Siblings exist for Music, Videos, Podcasts, NikePlus,
 CoverFlow, GeniusMixes, CameraVideos and more.
 
 ### 2. Main menu dispatcher: `FUN_080c3188` (Thumb, ~2 KB)
 It's called with an event-handler name and chains `strcmp(name, "HandleXxxHilited")`
-… checks, each calling the matching method above. The camera branches are:
-`HandleCameraHilited` → 0x080dcc34, `HandleCameraSelected` → 0x080dd08c.
+â€¦ checks, each calling the matching method above. The camera branches are:
+`HandleCameraHilited` â†’ 0x080dcc34, `HandleCameraSelected` â†’ 0x080dd08c.
 The handler name strings are at 0x080c3c18 onward.
 
-### 3. Symbol table (all UI names → IDs)
-- Body **0x59ed54–0x5a5480**: 2,201 records of
+### 3. Symbol table (all UI names â†’ IDs)
+- Body **0x59ed54â€“0x5a5480**: 2,201 records of
   `{u32 name_offset, u32 length+1, u32 symbol_id}`.
 - Names are at `0x5add8c + name_offset`. The pool is 4-byte aligned, grouped by
   feature.
@@ -221,7 +221,7 @@ Camera and photo symbols:
 | 0x1bf | `TCCameraInitial` |
 
 ### 4. Compiled UI records (`CROS`)
-6,804 records tagged `CROS` (bytes 43 52 4f 53) in body 0x11bb30–0x670224.
+6,804 records tagged `CROS` (bytes 43 52 4f 53) in body 0x11bb30â€“0x670224.
 Layout seen at body 0x5b0800:
 
 ```
@@ -231,15 +231,15 @@ u32 1                     u32 4 (or 0xc)
 ```
 
 The run at 0x5b0800 binds the Pedometer and Photos main-menu items:
-PedometerInactiveHilited → Pedometer layout, PhotosHilited, PhotosSelected,
+PedometerInactiveHilited â†’ Pedometer layout, PhotosHilited, PhotosSelected,
 Photos_Screen, then `controller.GotoDefaultLayout`. **No `CROS` record carries
 the camera symbols**, so the camera item is defined somewhere else. Candidates:
-- u16 symbol-ID lists, e.g. body 0x47763e, which has 0x32b, 0x32c, … and 0x32a
+- u16 symbol-ID lists, e.g. body 0x47763e, which has 0x32b, 0x32c, â€¦ and 0x32a
   close together
 - a `{0x18, symbol_id, offset}` table at body 0x58c738 (one entry per symbol,
   pointing into another blob)
 
-### 5. Label table (UI text → label IDs)
+### 5. Label table (UI text â†’ label IDs)
 - Records of `{u32 offset, u32 length+1, u32 label_id}` around body **0x5999e4**,
   with strings at `0x5add8c + offset`, the same pool base as the symbol table.
   1,809 labels decoded.
@@ -248,24 +248,24 @@ the camera symbols**, so the camera item is defined somewhere else. Candidates:
   = 0x0dad0947. Every label named in sections 5 and 6 below belongs to the
   *next* ID, so for example item 0x9d13 is really Photos, not Video Camera.
 - Labels from 0x0dad0c00 up sometimes decode to the wrong text (e.g.
-  0x0dad0c05 → "Composers"), so there may be a second table or a different
+  0x0dad0c05 â†’ "Composers"), so there may be a second table or a different
   base for that range.
 - A second table at body 0x595a74 has `{label_id, u32, 0x10}` records (in the
-  same 0x0dad0942… order), purpose unknown.
+  same 0x0dad0942â€¦ order), purpose unknown.
 
 ### 6. `CROS` records are 24 bytes
 `{'CROS', u32 kind, u32 value, 1, 1, 0xc}`:
 - kind 0x80: value is a label ID
 - kind 0x9d00 / 0xab00 / 0xa180: value is a small item or resource ID in that
-  family (0x9d13, 0xab01, …)
+  family (0x9d13, 0xab01, â€¦)
 
-**Menu choice list at body 0x5ef900–0x5efe40:** each entry is one kind-0x9d00
-record (item ID 0x9d04–0x9d18) followed by its label twice. Item **0x9d13 =
+**Menu choice list at body 0x5ef900â€“0x5efe40:** each entry is one kind-0x9d00
+record (item ID 0x9d04â€“0x9d18) followed by its label twice. Item **0x9d13 =
 Video Camera**, 0x9d0d = Photos, 0x9d04 = Videos, 0x9d18 = Voice Memos. It
-includes Albums, Songs and the like, so it's probably the **Settings → Main
+includes Albums, Songs and the like, so it's probably the **Settings â†’ Main
 Menu** on/off list rather than the main menu itself.
 
-Body 0x5e70d4–0x5e72fc is a mixed run of label references: Photos, TV Shows, …,
+Body 0x5e70d4â€“0x5e72fc is a mixed run of label references: Photos, TV Shows, â€¦,
 Video Camera, then a kind-0xa180 record, then "Test Menu Item (has no ID)",
 Pedometer, Cover Flow, Playlists, Artists, ... Its structure is unclear.
 
@@ -315,7 +315,7 @@ View.
 Referenced from:
 - **Screen 0x0dad0868**, which has these resources:
   - `SCRN` (16 bytes)
-  - `SCRT`: a list of 47 template views, 0x0dad146a … 0x0dad156c, including
+  - `SCRT`: a list of 47 template views, 0x0dad146a â€¦ 0x0dad156c, including
     the camera row at +0x40
   - `SLst`, which points to `SUse` 0x0dad0666: five 0x70-byte view slots,
     0x0dad1470, 0x0dad1474, 0x0dad1475, **0x0dad14ed**, 0x0dad146d
@@ -332,16 +332,16 @@ all built the same way.
 ```
 TVCL 0xd (and 0xe)    main menu cell list: u32 count (41), then 24-byte cells
                       { 0x10, 'TVCL', u32 cell_id, 0x0dad102b, 0x0dad102c, 1 }
-                      cell ids 0x0dad1143 … 0x0dad116b; **cell #22 = 0x0dad1159**
-  └ CLov <cell_id>    cell properties: u32 n, then n × { 0x10, u32 property, 1, 4, 'SORC', u32 sorc_id }
-                      camera: property 0x0dad1cf9 → SORC 0x399, 0x0dad1cfb → SORC 0x39a
-      └ SORC <id>     data source: { 1, 0xc, 'SORC', u32 kind, u32 value, 1 }
-                      kind 0x80 = string → value is a Str ID
-                      SORC 0x399 / 0x39a → Str 0x0dad0946 "Video Camera"
+                      cell ids 0x0dad1143 â€¦ 0x0dad116b; **cell #22 = 0x0dad1159**
+  â”” CLov <cell_id>    cell properties: u32 n, then n Ã— { 0x10, u32 property, 1, 4, 'SORC', u32 sorc_id }
+                      camera: property 0x0dad1cf9 â†’ SORC 0x399, 0x0dad1cfb â†’ SORC 0x39a
+      â”” SORC <id>     data source: { 1, 0xc, 'SORC', u32 kind, u32 value, 1 }
+                      kind 0x80 = string â†’ value is a Str ID
+                      SORC 0x399 / 0x39a â†’ Str 0x0dad0946 "Video Camera"
 CEVT 0x0dad0868       the main menu screen's event script (format below)
-                      table.cid.229445977.chosen → HandleCameraSelected   (229445977 = 0x0dad1159)
-                      table.cid.229445977.linger → HandleCameraHilited
-C++ FUN_080c3188      strcmp dispatch: "HandleCameraSelected" → 0x080dd08c → posts "CameraSelected"
+                      table.cid.229445977.chosen â†’ HandleCameraSelected   (229445977 = 0x0dad1159)
+                      table.cid.229445977.linger â†’ HandleCameraHilited
+C++ FUN_080c3188      strcmp dispatch: "HandleCameraSelected" â†’ 0x080dd08c â†’ posts "CameraSelected"
 ```
 
 "chosen" means selected, and "linger" means highlighted.
@@ -350,10 +350,10 @@ C++ FUN_080c3188      strcmp dispatch: "HandleCameraSelected" → 0x080dd08c →
 strings keyed by ID. They're the reliable way to look up text by ID.
 
 **CEVT format.** Bytes, little-endian: `u16 count`, `u16 first`, then entries
-of `u8 op (0x31)`, `u16 symbol`, `u16 nargs`, and `nargs × {u16 op, u16 n,
-n × u16 symbol}`, then the next `u16 symbol`.
+of `u8 op (0x31)`, `u16 symbol`, `u16 nargs`, and `nargs Ã— {u16 op, u16 n,
+n Ã— u16 symbol}`, then the next `u16 symbol`.
 
-Read as a chain, the pairs are `(table.cid.N.chosen|linger) → handler`. The
+Read as a chain, the pairs are `(table.cid.N.chosen|linger) â†’ handler`. The
 handler is either a C++ `Handle*` name (dispatched by `FUN_080c3188`) or a
 built-in action. Built-in actions seen so far:
 - symbol 0x4a with op 0x111 `[a, screen]`: probably "push screen", e.g.
@@ -370,36 +370,36 @@ pairing is solid. The op-argument meanings are guesses.
   "label table" in section 5 is the **`Str ` entry list**. Both are
   `{id, offset, size}`, so my hand-made decodes were off by one record.
   `ResourceDB.text()` and `symbol_id()` are correct; the symbol IDs in the
-  sections 3–9 tables may be off by one.
-- **The CEVT format is now exact:** `u16 count`, then `count × {u16 event, u8 op
-  (0x31), u16 handler, u16 nargs, nargs × {u16 action, u16 n, n × u16 arg}}`,
+  sections 3â€“9 tables may be off by one.
+- **The CEVT format is now exact:** `u16 count`, then `count Ã— {u16 event, u8 op
+  (0x31), u16 handler, u16 nargs, nargs Ã— {u16 action, u16 n, n Ã— u16 arg}}`,
   consuming all 770 bytes. The handler is a C++ `Handle*` name or 0x4a (run
-  actions, e.g. `navigator.PushScreen(Search_Main_Screen, …)`,
-  `navigator.SwitchLayout(…)`). Parsed by `nanocam.resources.cevt_handlers`.
-- All 41 main-menu cells (TVCL 0xd) were mapped. #0 Music … #9 Composers …
-  #18 Photos … **#22 Video Camera** … #36 Settings.
+  actions, e.g. `navigator.PushScreen(Search_Main_Screen, â€¦)`,
+  `navigator.SwitchLayout(â€¦)`). Parsed by `nanocam.resources.cevt_handlers`.
+- All 41 main-menu cells (TVCL 0xd) were mapped. #0 Music â€¦ #9 Composers â€¦
+  #18 Photos â€¦ **#22 Video Camera** â€¦ #36 Settings.
 
 **Why not add a new cell?** The firmware finds the resource index at runtime
 (no literal points at it). Memory right after the image is used (`.bss`,
 heap). Growing the index or appending data isn't safe until that's understood.
 
 **`patches/photo_camera_menu.py`** repurposes cell #9 **Composers** (off by
-default in the main menu; Music → Composers still works) with 5 checked
+default in the main menu; Music â†’ Composers still works) with 5 checked
 in-place patches, 29 bytes in total:
 
 | Body offset | Change |
 |---|---|
-| 0x627f80 | `Str` 0x0dad094f "Test Menu Item (has no ID)" → "Photo Camera" |
-| 0x5e60d4, 0x5e60ec | `SORC` 0x37f / 0x380 value → `Str` 0x0dad094f |
-| 0x5af34f | CEVT: `table.cid.229445964.chosen` handler HandleComposersSelected → **HandleCameraSelected** |
-| 0x5af356 | CEVT: `…linger` handler HandleComposersHilited → **HandleCameraHilited** |
+| 0x627f80 | `Str` 0x0dad094f "Test Menu Item (has no ID)" â†’ "Photo Camera" |
+| 0x5e60d4, 0x5e60ec | `SORC` 0x37f / 0x380 value â†’ `Str` 0x0dad094f |
+| 0x5af34f | CEVT: `table.cid.229445964.chosen` handler HandleComposersSelected â†’ **HandleCameraSelected** |
+| 0x5af356 | CEVT: `â€¦linger` handler HandleComposersHilited â†’ **HandleCameraHilited** |
 
-Still unknown: the Settings → Main Menu toggle probably still says
+Still unknown: the Settings â†’ Main Menu toggle probably still says
 "Composers".
 
 ### 12. Camera screen: what the center button does
 
-**Event script.** The camera screen's events are in `SEVT` 0x0dad061e–0x0dad0622
+**Event script.** The camera screen's events are in `SEVT` 0x0dad061eâ€“0x0dad0622
 (five identical copies, same format as CEVT, parsed by `cevt_handlers`):
 
 | Event | Handler |
@@ -410,26 +410,26 @@ Still unknown: the Settings → Main Menu toggle probably still says
 | `cameraremote.action.up` | HandleCameraRemoteSelect |
 | `mikey.center.up` / `.delayedup` | HandleMikeyCenter / HandleMikeyCenterReleased |
 | `wheel` | HandleWheel |
-| `controller.GotoActiveLayout`, `GotoEffectsLayout`, `GotoDiskFull`, `GotoNotIntialized` | 0x4a actions (`navigator.SwitchLayout(Camera_Screen_Active / _Effects …)`) |
+| `controller.GotoActiveLayout`, `GotoEffectsLayout`, `GotoDiskFull`, `GotoNotIntialized` | 0x4a actions (`navigator.SwitchLayout(Camera_Screen_Active / _Effects â€¦)`) |
 
 Other camera-related event scripts:
 - `CEVT` 0x0dad092e, a pause menu: ResumeRecord / StopAndDelete / FinishRecord
-- `SEVT` 0x0dad0801–0807, the Voice Memos `StartRecord` family. The camera has no
+- `SEVT` 0x0dad0801â€“0807, the Voice Memos `StartRecord` family. The camera has no
   such data-level StartRecord, so camera recording is started from C++.
 
 **C++ camera controller dispatcher `FUN_080c85c4`** (Thumb). Its name strings are
-at 0x080c8680…; part of it was mis-decoded as ARM, so use
+at 0x080c8680â€¦; part of it was mis-decoded as ARM, so use
 `RedoThumb.java 0x080c85da 0x080c867f` first:
 
 ```
 cam = FUN_082133c8(this->0x50)
 if name in {HandleSelect, HandleCameraRemoteSelect, HandleMikeyCenter, HandleMikeyCenterReleased}:
-    if *(u8*)(cam + 0x105) == 2:  post(this, 8)      ← center button
+    if *(u8*)(cam + 0x105) == 2:  post(this, 8)      â† center button
     else: FUN_081940f0(-1)                            (error/assert path)
 elif name == "PopCamera":       FUN_082128b6(cam, 0); this[0x64] = 1; post(this, 6)
 elif name == (next string):     FUN_082128b6(cam, 0); this[0x64] = 2; post(this, 6)
 elif name == "HandleSelectPressAndHold": this[0x68] = 0x0dad061f; this[0x6c] = 2; post(this, 9)
-else: FUN_082117ec(this, name, …)                     (base class)
+else: FUN_082117ec(this, name, â€¦)                     (base class)
 ```
 
 `post(this, cmd)` is `FUN_081e1a7c`, a generic state-machine event queue (on the
@@ -437,8 +437,8 @@ object at this+0x60). **Command 8 = the center press**, which should toggle
 recording; 6 = leave; 9 = long press (effects).
 
 **Next:** find `TCameraApp::TCameraStateMachine` (RTTI string
-`N10TCameraApp19TCameraStateMachineE` at body 0x521f21) → typeinfo → vtable
-→ the state handlers. Then find where command 8 leads to the recorder.
+`N10TCameraApp19TCameraStateMachineE` at body 0x521f21) â†’ typeinfo â†’ vtable
+â†’ the state handlers. Then find where command 8 leads to the recorder.
 `FUN_080bc69c` (matches the name `"StartRecord"`) is the recorder's end.
 For photo mode, command 8 should trigger one JPEG capture instead.
 
@@ -450,7 +450,7 @@ New Ghidra scripts:
 ### 13. Frame flags: how a frame becomes a JPEG
 
 **Frames carry a flag word at frame+0x48.** The test is
-`FUN_0824e314(frame, bit)` → `FUN_08206892`: `(*(u32*)(frame+0x48) & bit) != 0`.
+`FUN_0824e314(frame, bit)` â†’ `FUN_08206892`: `(*(u32*)(frame+0x48) & bit) != 0`.
 
 **Splitter routing (`FUN_08113810`)**, stage vtable at 0x0852bf7c; loop
 `FUN_080eedd0`, decide `FUN_08113ae2`:
@@ -458,7 +458,7 @@ New Ghidra scripts:
 | Flag | Goes to |
 |---|---|
 | 0x2, 0x8, 0x40 | video queue |
-| **0x20** | **JPEG queue**; the listener gets code 3 (0x2 → 1, 0x8 → 2) |
+| **0x20** | **JPEG queue**; the listener gets code 3 (0x2 â†’ 1, 0x8 â†’ 2) |
 | 0x10 | end of stream; goes to both |
 | 0x1 | handed to the listener (viewfinder?) |
 
@@ -485,7 +485,7 @@ Nothing found so far ever sets 0x20. These all came up empty:
 
 `snapShot*` strings are Nike+ workout XML tags, not camera code.
 
-**Experiment v1 (invalid):** patching 7 → 0x27 and 0xd → 0x2d only raised buffer
+**Experiment v1 (invalid):** patching 7 â†’ 0x27 and 0xd â†’ 0x2d only raised buffer
 limits. The test ran normally (Photo Camera opened, recording worked, giving
 `IMG_0004.mp4`), and no .jpg was written, as you'd now expect.
 
@@ -496,7 +496,7 @@ checks test 0x1 instead of 0x20:
 |---|---|
 | splitter: push to the JPEG queue | 0x08113972 |
 | preprocess: accept the frame | 0x080eddb8 |
-| preprocess: convert kind 1 → kind 2 | 0x080eddd8 |
+| preprocess: convert kind 1 â†’ kind 2 | 0x080eddd8 |
 | encode: write .jpg | 0x080ea03e |
 
 What the result would mean:
@@ -530,14 +530,14 @@ void TakePhoto(Pipeline *p, const char *path, const u32 cb[3]) {
 - **Per-frame request handling:** `FUN_081cb9b4(p, frame)` runs on every frame the
   capture thread allocates. It turns `p+0x34` bits into frame flags, set with
   **`FUN_081cd7be(frame, bit)`**:
-  - **0x20 → 0x40:** arm the request, one frame ahead
-  - **0x40 → flag 0x20 + `FUN_0810a2e4(frame, p+0x4d, p+0x850)`:** attach the
+  - **0x20 â†’ 0x40:** arm the request, one frame ahead
+  - **0x40 â†’ flag 0x20 + `FUN_0810a2e4(frame, p+0x4d, p+0x850)`:** attach the
     path and callback (setter `FUN_0811ad48`, which copies into a 1 KB buffer)
-  - **0x2 → flags 0x2 | 0x40 + `FUN_0810a3a0`** (path + 4-word callback): start a
+  - **0x2 â†’ flags 0x2 | 0x40 + `FUN_0810a3a0`** (path + 4-word callback): start a
     video file
-  - **0x8 → flag 0x8 (+0x80):** stop recording
-  - **0x10 → flag 0x10:** end of stream
-  - **0x1 → flag 0x1**
+  - **0x8 â†’ flag 0x8 (+0x80):** stop recording
+  - **0x10 â†’ flag 0x10:** end of stream
+  - **0x1 â†’ flag 0x1**
 - **The only caller of TakePhoto** is the wrapper `FUN_080857cc(?, path, cb,
   &pipeline)`. It's referenced nowhere, while its neighbouring wrappers sit in
   interface vtables at 0x0851007c / 0x085101e8 / 0x08510354. **The feature is
@@ -548,7 +548,7 @@ void TakePhoto(Pipeline *p, const char *path, const u32 cb[3]) {
 
 **Plan for the real photo patch** (a code patch, the first one):
 1. In the camera controller dispatcher `FUN_080c85c4`, the
-   `HandleSelect`/`MikeyCenter` branch (0x080c8602–0x080c860e) currently
+   `HandleSelect`/`MikeyCenter` branch (0x080c8602â€“0x080c860e) currently
    posts command 8 (record toggle). Replace it with a branch to a small Thumb stub.
 2. The stub runs `TakePhoto(*(Pipeline**)0x086ba368, "/DCIM/000APPLE/IMG_9000",
    zero_cb)` and returns 1. First version: a fixed name that's overwritten on
@@ -559,13 +559,13 @@ void TakePhoto(Pipeline *p, const char *path, const u32 cb[3]) {
 ### 15. First code patch: `patches/take_photo.py`
 
 - **Hook** at 0x080c8602 (camera dispatcher, center-button branch):
-  `add r5,#0xff; add r5,#5; ldrb r0,[r5,#1]` → `bl stub; b 0x080c866e`. That
+  `add r5,#0xff; add r5,#5; ldrb r0,[r5,#1]` â†’ `bl stub; b 0x080c866e`. That
   returns "handled" and skips the command-8 recording toggle.
 - **Stub** in the code cave at **0x08276b10** (244 zero bytes of padding at
-  0x08276b0c–0x08276c00, with no references; preceded by a function ending
+  0x08276b0câ€“0x08276c00, with no references; preceded by a function ending
   at 0x08276afe). It runs
   `p = *(Pipeline**)0x086ba368; if (p) TakePhoto(p, "/DCIM/000APPLE/IMG_9000", {0,0,0});`
-- `nanocam/thumb.py` is a small Thumb assembler (bl, b, beq, ldr pc, adr, …). It's
+- `nanocam/thumb.py` is a small Thumb assembler (bl, b, beq, ldr pc, adr, â€¦). It's
   checked against real firmware instructions in `tests/test_thumb.py`.
 - Limits of v1: it applies in both camera items, so recording is disabled, and
   every press overwrites `IMG_9000.jpg`.
@@ -578,8 +578,8 @@ It isn't a JPEG.
 ### How to add a "Photo Camera" main-menu item (by adding resources)
 All of these are additions to the resource database:
 1. **`Str`**: a new ID with "Photo Camera".
-2. **`SORC` ×2**: `{1, 0xc, 'SORC', 0x80, <new Str id>, 1}`.
-3. **`CLov`**: a new cell ID with properties 0x0dad1cf9 / 0x0dad1cfb → the two
+2. **`SORC` Ã—2**: `{1, 0xc, 'SORC', 0x80, <new Str id>, 1}`.
+3. **`CLov`**: a new cell ID with properties 0x0dad1cf9 / 0x0dad1cfb â†’ the two
    new SORCs.
 4. **`TVCL` 0xd and 0xe**: insert a cell record after cell #22, and bump the
    count from 41 to 42.
@@ -588,7 +588,7 @@ All of these are additions to the resource database:
 6. **`CEVT` 0x0dad0868**: add entries mapping them to `HandleCameraSelected` /
    `HandleCameraHilited`. That gives a second entry that opens the camera; a
    photo-mode flag comes later.
-7. Check whether the Settings → Main Menu on/off list also needs an entry.
+7. Check whether the Settings â†’ Main Menu on/off list also needs an entry.
 
 That needs nanocam to **rebuild** the resource index and data region: append
 resources, grow the per-type entry lists, and fix every offset. In-place
@@ -620,7 +620,7 @@ patching can't do it.
 
 **v1 result (n5g-take-photo.dfu): it worked.** Pressing the center button wrote
 `D:\DCIM\000APPLE\IMG_9000.jpg`: 107,911 bytes, starting FF D8 FF E1 (EXIF), ending FF D9,
-640×480. The photo is a real desk shot. Apple's dormant TakePhoto path is fully working.
+640Ã—480. The photo is a real desk shot. Apple's dormant TakePhoto path is fully working.
 
 **Telling the two menu items apart.** Both items used to call HandleCameraSelected. v2 leaves
 Photo Camera's `chosen` handler as **HandleComposersSelected** (it only changes the label and
@@ -632,7 +632,7 @@ hilite). Then, in the main menu dispatcher `FUN_080c3188`:
 - flag = 0: SHUTTER redoes both adds and returns, so the original code at 0x080c8606 records.
 - flag = 1: SHUTTER calls TAKE_NUMBERED, drops its return address and `bx`es to 0x080c866e (return 1).
 
-**Numbering.** There is no stored counter. Each press tries n = 0, 1, … up to 9999:
+**Numbering.** There is no stored counter. Each press tries n = 0, 1, â€¦ up to 9999:
 `String s; init(s); sprintf(s, "/DCIM/000APPLE/IMG_%04d.jpg", n); if (!exists(s, 0)) break;`
 It then runs vsnprintf into a stack buffer, cuts the name at ".jpg", and calls TakePhoto.
 
@@ -656,8 +656,8 @@ will fault.
 
 | Image | Result |
 |---|---|
-| n5g-take-photo.dfu | **works**: IMG_9000.jpg, 640×480 |
-| n5g-photo-mode.dfu | **works**: IMG_0000–0005.jpg (all 640×480), then Video Camera recorded IMG_0005/0006.mp4. Writing the flag byte in the cave is fine. |
+| n5g-take-photo.dfu | **works**: IMG_9000.jpg, 640Ã—480 |
+| n5g-photo-mode.dfu | **works**: IMG_0000â€“0005.jpg (all 640Ã—480), then Video Camera recorded IMG_0005/0006.mp4. Writing the flag byte in the cave is fine. |
 
 ## 17. Shutter sound (photo mode v3)
 
@@ -703,13 +703,13 @@ char name[16] ("IMG_0006.mp4"), u32 1001, u32 duration in ms (0x2bcf = 11.2 s), 
 u16 288, u16 384 (content size), u8 1, 3 bytes padding
 ```
 
-Thumbnails are RGB565 and start at 0x40. The table at the end is {u32 artwork format, u32 offset} × 3:
+Thumbnails are RGB565 and start at 0x40. The table at the end is {u32 artwork format, u32 offset} Ã— 3:
 
 | Format | Size | Contents |
 |---|---|---|
-| 0x437 | 80×80 | square crop |
-| 0x42a | 64×64 | square crop |
-| 0x43f | 384×384 | the 288×384 portrait frame, centred with black bars |
+| 0x437 | 80Ã—80 | square crop |
+| 0x42a | 64Ã—64 | square crop |
+| 0x43f | 384Ã—384 | the 288Ã—384 portrait frame, centred with black bars |
 
 These format IDs match the 0x437 / 0x42a / 0x43f constants in FUN_08057a70.
 
@@ -721,14 +721,14 @@ next to `IMG_0008.jpg`. Result: not tested yet.
 
 **Test 1 result:** not listed. The DAT said kind 1001 (video) but pointed at a .jpg.
 
-**Kinds (FUN_0825a314):** JPG/JPEG → 501, MP4 → 1001, MOV → 1002. FUN_0825061c(k) is "video"
+**Kinds (FUN_0825a314):** JPG/JPEG â†’ 501, MP4 â†’ 1001, MOV â†’ 1002. FUN_0825061c(k) is "video"
 (k is 1001 or 1002); FUN_08250630(k) is "photo" (k == 501).
 
 **Test 2** (IMG_0007.DAT, kind 501): **listed**, with a thumbnail, but it **doesn't open**. The date
 shows as "Aug 11, 2879, 3:151 PM" and the length as "0 seconds".
 
 **A camera-photo browser already exists in the Photos app's UI.** Photos screen SEVT 0x0dad06f8
-(and 06f9–06fb) contains:
+(and 06f9â€“06fb) contains:
 ```
 controller.PushScreen_BrowseCameraPhotos    -> navigator.PushScreen PhotosGL_Camera_Screen / PhotosGL_Camera_Screen_Thumbs
 controller.PushScreen_BrowseCameraPhotosAlt -> navigator.PushScreen PhotosGL_Camera_Screen / PhotosGL_Camera_Alt_Screen_Thumbs
@@ -763,7 +763,7 @@ Conclusion: on-device photo viewing needs one of these:
   least 512 bytes.
 - Raw scan of the image:
   - Thumb BL targets and 32-bit pointers rule out 42 of them, leaving 15 "clean" (about 14 KB).
-  - All 15 are ARM-mode code (an ARM library around 0x0839f000–0x083fc000). Every one has ARM
+  - All 15 are ARM-mode code (an ARM library around 0x0839f000â€“0x083fc000). Every one has ARM
     `B`/`BL` instructions jumping to it from outside, for example several from a dispatcher around
     0x083a0a60. Ghidra just hadn't disassembled those callers. **So none is proven dead. Don't reuse them.**
 - The remaining option for code space: disconnect a feature we don't need from its only entry
@@ -771,7 +771,7 @@ Conclusion: on-device photo viewing needs one of these:
 
 **Candidate features to give up:**
 - **Games:** not worth it. The firmware has only small menu, screen and control classes for games
-  (TCGamesMenu, TCGameScreen, TCGameControls, 4 vtable slots each, code around 0x080b3000–0x080b6200).
+  (TCGamesMenu, TCGameScreen, TCGameControls, 4 vtable slots each, code around 0x080b3000â€“0x080b6200).
   There are no Klondike/Maze/Vortex strings; the games themselves live on disk (iPod_Control/Games_RO).
 - **Pedometer, Radio:** they run background services (accelerometer, tuner), so they're risky to cut.
 - **Voice Memos:** probably shares the audio recording path with the video camera's microphone.
@@ -801,7 +801,7 @@ Conclusion: on-device photo viewing needs one of these:
 (`if (on) FUN_081940f0(-1)`). The row logic has no case for a camera row. So turning on the
 gate alone would trip that assert.
 
-**Cheapest experiment** (3–4 small in-place patches, no cave needed):
+**Cheapest experiment** (3â€“4 small in-place patches, no cave needed):
 1. Make `FUN_0821aebc` return 1. The Photos app should then stop saying "No photos".
 2. Make `FUN_08232e52` return 1.
 3. Remove the assert in FUN_080d3140.
@@ -811,15 +811,15 @@ our JPEGs. A crash only means a reboot.
 
 **Gate test image:** `patches/camera_photos_gate_test.py` builds `firmware/n5g-camera-photos-test.dfu`.
 It's photo_mode v3 plus three patches:
-- 0x0821aebc `0020` → `0120`
-- 0x08232e52 `0020` → `0120`
-- 0x080d3194 `03d0` → `03e0` (beq becomes b)
+- 0x0821aebc `0020` â†’ `0120`
+- 0x08232e52 `0020` â†’ `0120`
+- 0x080d3194 `03d0` â†’ `03e0` (beq becomes b)
 
 Result: **no change**. The Photos app still says "No photos", so that decision is made somewhere else.
 
 **Why v1 changed nothing:** the main menu decides first. At 0x080dd210 (PhotosSelected) it runs
-`FUN_0824d280(lib, 0)`; if that's 0 it posts `EmptyPhotosSelected` (→ NoContent_Screen_NoPhotos),
-otherwise `PhotosSelected`. **v2** also changes 0x080dd230 `bne` → `b`, so the menu always enters
+`FUN_0824d280(lib, 0)`; if that's 0 it posts `EmptyPhotosSelected` (â†’ NoContent_Screen_NoPhotos),
+otherwise `PhotosSelected`. **v2** also changes 0x080dd230 `bne` â†’ `b`, so the menu always enters
 the Photos app. Image: `firmware/n5g-camera-photos-test2.dfu`. Result: **opening Photos crashes**.
 
 **Narrowing down the crash** (each image is photo_mode v3 plus some of the gate patches):
@@ -836,7 +836,7 @@ If A crashes, the Photos app can't cope with an empty synced library, and the ca
 check (A doesn't open, B gets in), and then it crashes with an empty synced library. Entering via
 the Photos main screen looks like a dead end.
 
-## 21. A better entry point: Camera Roll → EnterPhotosScreen
+## 21. A better entry point: Camera Roll â†’ EnterPhotosScreen
 
 The Camera Roll list screens (SEVT 0x0dad0623 / 0x0dad0624, used by SLst 0x0dad084b / 084c,
 `TCCameraLocalMediaList`) contain:
@@ -855,7 +855,7 @@ FUN_082513ca(photosModel, 0, 0); photosModel[0x55c] = !flag;
 (optional notify through FUN_081b115c)
 post(this, "EnterPhotosScreen")                       // FUN_0819d8bc
 ```
-`SArtLibraryDCIM`'s constructor `FUN_082737c4(obj, …)` calls `FUN_0819938c(obj, 0)` and then sets
+`SArtLibraryDCIM`'s constructor `FUN_082737c4(obj, â€¦)` calls `FUN_0819938c(obj, 0)` and then sets
 the DCIM vtable, so it's a drop-in replacement for the first line.
 
 **Plan:**
@@ -882,19 +882,19 @@ then branches through a switch8 table at 0x08084804 (`blx 0x0818f268`). Items ar
 `FUN_0809c95c` sets the Photos album but shows nothing, which fits "listed but doesn't open".
 Its dormant twin `FUN_0809c8c0` posts `EnterPhotosScreen`.
 
-**Test:** 0x08084858 `bl 0x0809c95c` → `bl 0x0809c8c0`
-(`patches/camera_roll_photos_test.py` → `firmware/n5g-camera-roll-photos-test.dfu`). Not tested yet.
+**Test:** 0x08084858 `bl 0x0809c95c` â†’ `bl 0x0809c8c0`
+(`patches/camera_roll_photos_test.py` â†’ `firmware/n5g-camera-roll-photos-test.dfu`). Not tested yet.
 
-## 23. ⚠ The DCIM scanner deletes whole items
+## 23. âš  The DCIM scanner deletes whole items
 
 **Observed:**
 - Test 2's IMG_0007.jpg plus .DAT were listed, then later disappeared.
 - A second IMG_0007.jpg (taken 2026-11-06 4:43) plus a fresh kind-501 .DAT also disappeared,
   after booting n5g-camera-roll-photos-test.dfu. Camera Roll showed nothing.
 - The user did not delete them.
-- JPEGs **without** a .DAT (IMG_0000–0005 on 2026-11-04) survived several boots.
+- JPEGs **without** a .DAT (IMG_0000â€“0005 on 2026-11-04) survived several boots.
 
-**Mechanism** (the scanner around 0x0809b408–0x0809b7b0):
+**Mechanism** (the scanner around 0x0809b408â€“0x0809b7b0):
 - It recognises `%s/%s  is a DCIM formated entity`, looks it up in the camera DB
   (`FUN_0824c854`), and calls the importer (vtable +0xd8, probably `FUN_08156444`).
 - The importer returns **3** if the .DAT can't be read, or if the DAT's kind doesn't match the
@@ -914,13 +914,13 @@ off first. Backups are in firmware/dcim-backup.
 
 **The DAT reader, `FUN_08250478(dat, &id, dir, folder, prefix)`**, called from the importer
 `FUN_08156444` at 0x08156476:
-1. Path = `FUN_0825c548(id, …)` + ".DAT". If `exists()` is false, it fails.
+1. Path = `FUN_0825c548(id, â€¦)` + ".DAT". If `exists()` is false, it fails.
 2. Reads 0x1c header bytes and requires all of:
    - `doPI` `FmaC`
    - u32 at 0x08 == 0x00010001
-   - header size ≤ 0x1c, info size ≤ 0x24, entry size ≤ 8
+   - header size â‰¤ 0x1c, info size â‰¤ 0x24, entry size â‰¤ 8
 3. Seeks to the info offset and reads the info block; it must read the full size.
-4. If count > 0, it reads count × 8-byte table entries from the table offset (it doesn't read the pixels).
+4. If count > 0, it reads count Ã— 8-byte table entries from the table offset (it doesn't read the pixels).
 
 Our photo DATs pass all of these. The importer then needs `info.kind == kind(extension)` (501
 for .jpg), which also passes. **It returns 3 only on those two failures.**
@@ -931,7 +931,7 @@ from 0x0807f758):
 set purge(8, 10000, 8)                       // FUN_08278178, IDs 0..9999
 ... scan fills sets (see FUN_0809b408 part) ...
 for id in purge:
-    dir = FUN_0823bc3c(id, …)                // "/DCIM/NNNAPPLE"
+    dir = FUN_0823bc3c(id, â€¦)                // "/DCIM/NNNAPPLE"
     pattern = sprintf("%s%04d", "IMG_", id) + ".*"
     for each name in dir (FUN_0827bd60 / FUN_0827bd38):
         if wildmatch(name, pattern) (FUN_081d4666):
@@ -956,9 +956,9 @@ Throwaway files in D:\DCIM\000APPLE. Originals are in firmware/dcim-backup.
 | IMG_0050.jpg + .DAT | copy of backup IMG_0003.jpg, kind-501 DAT from camroll.py | does a photo item get purged? |
 | IMG_0051.jpg | same JPEG, no DAT | control: a JPEG alone |
 | IMG_0052.mp4 + .DAT | backup IMG_0001.mp4 + its real DAT, name field changed to IMG_0052.mp4 | control: does any item copied in from a PC get purged? |
-| IMG_0000.jpg | the user's real photo (backed up) | — |
+| IMG_0000.jpg | the user's real photo (backed up) | â€” |
 
-Procedure: stock boot → Camera Roll (note what's listed) → reboot → Camera Roll → plug in and compare.
+Procedure: stock boot â†’ Camera Roll (note what's listed) â†’ reboot â†’ Camera Roll â†’ plug in and compare.
 Result: **every file was gone**: IMG_0000.jpg (the user's photo), IMG_0050.jpg/.DAT, IMG_0051.jpg
 (no DAT!) and IMG_0052.mp4/.DAT. A new IMG_0000.mp4 + .DAT from 2026-11-06 7:14:18 is present.
 The user **recorded a video** during the test.
@@ -971,9 +971,9 @@ The user **recorded a video** during the test.
 - **How the scan routine is built:**
   1. `FUN_08256bf8` walks the folder (0x0809b310).
   2. A loop over the known-item set at `scanner+0xac` runs the "is a DCIM formated entity" / lookup /
-     import code (0x0809b352–0x0809b5a0, including the 0x0809b408 part). That loop fills set
+     import code (0x0809b352â€“0x0809b5a0, including the 0x0809b408 part). That loop fills set
      `sp+0xb0`, which is copied to the purge set `sp+0xa0` (0x0809b5b6).
-  3. The purge loop deletes `IMG_NNNN.*` for every ID in the purge set (0x0809b5c0–0x0809b6c2).
+  3. The purge loop deletes `IMG_NNNN.*` for every ID in the purge set (0x0809b5c0â€“0x0809b6c2).
   Ghidra doesn't reach loop 2's body, so the exact rule for what gets purged is still unknown.
 - **Observed:**
   - 2026-11-04: JPEGs the camera wrote with no DAT survived many camera sessions, and IMG_0005.jpg
@@ -988,13 +988,13 @@ The user **recorded a video** during the test.
 **v4: `firmware/n5g-photo-pic.dfu`.** photo_mode.py's FMT is now `/DCIM/000APPLE/PIC_%04d.jpg`,
 the same length, so the cave layout is identical (fmt at 0x08276be4, 244/244 bytes). Everything else
 is the same as v3: numbered photos, shutter sound, and Video Camera untouched.
-Result (2026-11-06): **works**. PIC_0000–0004.jpg (7:31:12–22), all 640×480 and valid, plus
-videos IMG_0001–0003.mp4 (7:30:50–7:31:00), and IMG_0000.mp4 (7:14) survived. The videos were
+Result (2026-11-06): **works**. PIC_0000â€“0004.jpg (7:31:12â€“22), all 640Ã—480 and valid, plus
+videos IMG_0001â€“0003.mp4 (7:30:50â€“7:31:00), and IMG_0000.mp4 (7:14) survived. The videos were
 recorded *before* the photos, though, so "photos survive a later recording" is **not yet shown**.
 **Follow-up:** after PIC_0005/0006 (7:33:06/16), IMG_0004.mp4 was recorded at 7:33:30, and all seven
 PIC_ photos survived. **PIC_ naming is safe from the purge.**
 
-### 23d. The purge rule, decoded with Capstone (loop at 0x0809b352–0x0809b5a0)
+### 23d. The purge rule, decoded with Capstone (loop at 0x0809b352â€“0x0809b5a0)
 
 Capstone is now in the venv. Ghidra won't decode this block.
 
@@ -1024,7 +1024,7 @@ purge_copy = purge -> purge loop deletes IMG_%04d.* for each id   (0x0809b5c0)
 **What this explains:**
 - The import fails (res 3) whenever the .DAT is missing or wrong. So **a JPEG with no .DAT whose
   number isn't already a known item is a purge candidate.**
-- On 2026-11-04 the camera's IMG_0000–0007.jpg shared their numbers with videos already in the known
+- On 2026-11-04 the camera's IMG_0000â€“0007.jpg shared their numbers with videos already in the known
   set, so they were skipped. That's why they survived.
 - On 2026-11-06 the known set was empty or different, so IMG_0051.jpg (no DAT), IMG_0050 and so on
   were new, and they were purged.
@@ -1041,7 +1041,7 @@ camera start. Never leave an IMG_NNNN.jpg without a .DAT on the iPod.
 
 IMG_0060.jpg (a copy of PIC_0003.jpg) plus a kind-501 .DAT from camroll.py. The whole folder was
 backed up first to firmware/dcim-backup/2026-11-06_*.
-Procedure: boot n5g-camera-roll-photos-test.dfu → Camera Roll → select IMG_0060 **without starting
+Procedure: boot n5g-camera-roll-photos-test.dfu â†’ Camera Roll â†’ select IMG_0060 **without starting
 the camera first**. **Not possible:** Camera Roll is only reachable from inside the camera app,
 so starting the camera (and its scan) always comes first. Result: Camera Roll listed **only videos**;
 IMG_0060 wasn't shown, and **both of its files were purged**.
@@ -1060,7 +1060,7 @@ IMG_0060 wasn't shown, and **both of its files were purged**.
   on disk. Then the Camera Roll photo test can run without anything being removed.
 
 **No-purge test image:** `patches/no_purge.py` builds `firmware/n5g-no-purge-test.dfu`. It's the PIC_
-photo firmware, plus the Camera Roll select → 0x0809c8c0 patch, plus 0x0809b684 `def1c4ff` →
+photo firmware, plus the Camera Roll select â†’ 0x0809c8c0 patch, plus 0x0809b684 `def1c4ff` â†’
 `0020c046`. IMG_0060.jpg + .DAT were put back on the iPod. Result: **not listed**, and later both files were
 gone again. The only code that uses the `.*` wildcard is the purge (0x0809b748, used at 0x0809b640),
 so the deletion probably happened **after a reboot into stock firmware** (cfw run only lasts until the
@@ -1074,12 +1074,12 @@ patched firmware**. So there's a second deleter: the camera DB's RemoveItem meth
 `delete_files` is set, calls `FUN_0809da18`, which deletes the item's .DAT (0x0809daa6) and its media
 file (0x0809dab0). It's called through a vtable. Likely story: the photo is imported, then removed
 again with its files, which is why it's never listed.
-**v2** (`firmware/n5g-no-purge-test2.dfu`) also changes 0x0812d50e `bl 0x0809da18` → `movs r0,#0; nop`.
+**v2** (`firmware/n5g-no-purge-test2.dfu`) also changes 0x0812d50e `bl 0x0809da18` â†’ `movs r0,#0; nop`.
 IMG_0060 was put back. Not tested yet.
 
 **No-purge v2 result:** IMG_0060 was still deleted.
 **v3** (`firmware/n5g-no-purge-test3.dfu`) also changes the purge's other branch, 0x0809b67e
-`bl 0x08234698` → `movs r0,#0; nop`. The listing flag `[sp+0x5c]` may mean "is a file" rather than
+`bl 0x08234698` â†’ `movs r0,#0; nop`. The listing flag `[sp+0x5c]` may mean "is a file" rather than
 "is a folder"; FUN_08234698 contains its own delete call (0x0823472a). IMG_0060 was put back.
 Not tested yet.
 
@@ -1088,14 +1088,14 @@ Not tested yet.
 mode. Ejecting returns to stock RetailOS, which remounts DCIM and runs the scan and purge (FUN_0807f648)
 **before** the user ever enters DFU to boot the test image. So none of the no-purge images ever got a
 chance to protect the files.
-**Correct procedure:** cfw run the test image first → plug in (disk mode under the patched firmware) →
-copy the files → eject (back into the patched firmware) → Camera Roll → plug in again without rebooting.
+**Correct procedure:** cfw run the test image first â†’ plug in (disk mode under the patched firmware) â†’
+copy the files â†’ eject (back into the patched firmware) â†’ Camera Roll â†’ plug in again without rebooting.
 
 **No-purge v3 result:** **crashed after eject**. Cause: after every deletion, the purge loop
-closes and re-opens the folder listing (0x0809b688–0x0809b6a6) to restart. With deletion NOP'd, the
+closes and re-opens the folder listing (0x0809b688â€“0x0809b6a6) to restart. With deletion NOP'd, the
 same file matched forever, allocating 0x44 bytes per pass, until it crashed.
 **v4** (`firmware/n5g-no-purge-test4.dfu`) leaves the delete calls alone and instead skips the
-whole purge loop: 0x0809b788 `beq 0x0809b78c` → `b 0x0809b78c`. It keeps the RemoveItem change at
+whole purge loop: 0x0809b788 `beq 0x0809b78c` â†’ `b 0x0809b78c`. It keeps the RemoveItem change at
 0x0812d50e. Not tested yet.
 
 **No-purge v4 result:** no crash, and **IMG_0060's files survived**, so skipping the purge loop works.
@@ -1121,7 +1121,7 @@ still-running test4.
   range `[+0x1dc, +0x1dc + +0x1e0)`.
 - For an item row, `FUN_0821f510(model, row, &count, &group)` gives an entry with `id` at +0xc.
   `kind = FUN_0821e274(id) = id >> 24`:
-  - **kind 0 → photo-list row** (props +0x138)
+  - **kind 0 â†’ photo-list row** (props +0x138)
   - otherwise a single video (count < 2, props +0x10c, opens via FUN_08244364) or a video group (+0x150)
 - `FUN_0821fe5c(model, row)` builds each row's title and date text.
 - **Item IDs:** `FUN_0822be44(folder, file) = (folder & 0x3ff) << 14 | (file & 0x3fff)`. That's the
@@ -1157,7 +1157,7 @@ base 0x08000000, file offset 0x2e87c, length 0x6c43c4).
 
 - Imported `n5g-retailos-v6.dec` (ARM:LE:32:v6) into the same Ghidra project; auto-analysis took 404 s.
   **Use this program from now on** (run scripts with `-process n5g-retailos-v6.dec`). It decodes
-  `uxtb` and friends, and it finds callers the v5t program missed (FUN_0827a2cc ← 0x0809b446).
+  `uxtb` and friends, and it finds callers the v5t program missed (FUN_0827a2cc â† 0x0809b446).
   The v5t program is kept for reference, but its RedoThumb, FixNoReturn and RemoveFunc edits were not
   carried over.
 - Classes:
@@ -1169,9 +1169,9 @@ base 0x08000000, file offset 0x2e87c, length 0x6c43c4).
   FUN_0807f648 treats a nonzero result as a failed mount (`[0x37] = 0`). The caller may then roll
   back newly found items through RemoveItem, which deletes their files (the second deleter) and
   never lists them. Next: find the caller of vtable +0xac and what it does when the result is 10.
-- The 12 `ldr …,#0xac]; blx` call sites are on other classes (for example the volume loop in
+- The 12 `ldr â€¦,#0xac]; blx` call sites are on other classes (for example the volume loop in
   FUN_080b3108), so the mount's caller wasn't found that way.
-- **v5 test** (`firmware/n5g-no-purge-test5.dfu`) = v4 plus 0x0809b4e4 `b 0x0809b53a` → `b 0x0809b56e`.
+- **v5 test** (`firmware/n5g-no-purge-test5.dfu`) = v4 plus 0x0809b4e4 `b 0x0809b53a` â†’ `b 0x0809b56e`.
   After a new item is added, the scan continues to the next entry instead of returning 10. If photos
   then appear in Camera Roll, the early 10 was what blocked them. Not tested yet.
 - **v5 result:** still **not listed**. The early `return 10` isn't (or isn't the only) blocker.
@@ -1194,7 +1194,7 @@ means reclaiming space first (section 19). Alternatively, the Photos-library-fro
 firmware changes.
 
 **Baseline retest (photo-pic firmware, no Camera Roll patches):** IMG_0005 (copy of PIC_0003) plus a
-kind-501 DAT, copied in under n5g-photo-pic.dfu, then eject → Camera Roll: **not listed**. So test 2's
+kind-501 DAT, copied in under n5g-photo-pic.dfu, then eject â†’ Camera Roll: **not listed**. So test 2's
 success (IMG_0007 listed with the bogus date "Aug 11 2879") **can't be reproduced** with the same DAT
 generator. Differences from test 2 that remain:
 - in test 2, the DAT was added under **stock** firmware and the iPod was **rebooted**, so the item
@@ -1208,7 +1208,7 @@ differences are persistent state (test 2 was the first photo item ever, and the 
 persistent storage hasn't been found) and the specific item (ID 7, alongside only two 2014 videos).
 **Camera Roll photo viewing is parked here.**
 **Disk-mode repeat** (hardware disk mode via Select+Play, IMG_0007 = copy of PIC_0003 plus a kind-501
-DAT, eject → automatic restart → Camera Roll): **not listed** either. Every procedural variant of
+DAT, eject â†’ automatic restart â†’ Camera Roll): **not listed** either. Every procedural variant of
 test 2 now fails, so the difference must be persistent state or something about the original item.
 
 ## 24. The TakePhoto completion callback
@@ -1219,8 +1219,8 @@ test 2 now fails, so the difference must be persistent state or something about 
 - The JPEG encoder `FUN_080f533c(frame)`:
   ```
   FUN_0810a2da(frame, path_buf, &cb, 1)           // path_buf = frame path (+0x48 area), cb = {fn, ctx, byte}
-  append ".jpg"; if free space ≤ 0x400 or frame[9] != 2: cb.fn(path_buf, 1 /*failed*/, 0, cb.ctx)
-  … encode, write EXIF (date "%04d:%02d:%02d %02d:%02d:%02d", "FW %s Sens R2.1"), write file …
+  append ".jpg"; if free space â‰¤ 0x400 or frame[9] != 2: cb.fn(path_buf, 1 /*failed*/, 0, cb.ctx)
+  â€¦ encode, write EXIF (date "%04d:%02d:%02d %02d:%02d:%02d", "FW %s Sens R2.1"), write file â€¦
   if (*(u8*)0x08550950) FUN_08106838(path_buf, raw, w, h)   // DEBUG: byte-swaps the raw frame and writes <name>.yuv
   cb.fn(path_buf, 0 /*ok*/, 0, cb.ctx)
   ```
@@ -1228,11 +1228,11 @@ test 2 now fails, so the difference must be persistent state or something about 
   after the file is closed. That's the natural hook for registering a photo.
 - `FUN_08106838` is not a thumbnailer. It's a debug raw-frame (.yuv) dump, off by default (flag byte = 0).
 - **What a registration callback would need:**
-  1. Make the three RGB565 thumbnails (80², 64², 384² letterboxed). The raw frame isn't available in
+  1. Make the three RGB565 thumbnails (80Â², 64Â², 384Â² letterboxed). The raw frame isn't available in
      the callback, so it would have to decode the JPEG, or the hook would have to sit in the encoder.
   2. Write the .DAT.
   3. Add the item to the camera DB (importer / known set).
-  Realistically that's 0.5–1 KB of new code, more than the 244-byte cave. And step 3 runs into the
+  Realistically that's 0.5â€“1 KB of new code, more than the 244-byte cave. And step 3 runs into the
   same unknown "not listed" blocker as the hand-made DATs (section 23i).
 
 ## 25. Code space, round 2 (using the ARMv6 analysis)
@@ -1246,7 +1246,7 @@ test 2 now fails, so the difference must be persistent state or something about 
 | 0x080857cc TakePhoto wrapper | 22 | free (its only "ref" is a stray ARM decode) |
 
 DeadFuncs on the v6 program lists 243 unreferenced functions of at least 128 bytes. None of the Thumb
-ones in 0x08000000–0x08300000 passes the raw scan (every one has some call-like hit), so none is
+ones in 0x08000000â€“0x08300000 passes the raw scan (every one has some call-like hit), so none is
 proven dead. **Total usable: about 166 bytes.**
 
 **Option 2, other languages' text:** **not in the firmware.** No French, German or Spanish UI words
@@ -1256,8 +1256,8 @@ SORC 98 KB, StrT 64 KB, Str 43 KB, and so on.
 
 ## 26. Voice Memos as a code-space donor
 
-- 17 Voice Memos classes (TVoiceMemosApp, TVoiceMemosModel(+_Import), TCVoiceMemos, …Idle,
-  …Loading, …MainMenu, …ContextMenu, …TimedStatus, …LabelSelectMenu, plus their
+- 17 Voice Memos classes (TVoiceMemosApp, TVoiceMemosModel(+_Import), TCVoiceMemos, â€¦Idle,
+  â€¦Loading, â€¦MainMenu, â€¦ContextMenu, â€¦TimedStatus, â€¦LabelSelectMenu, plus their
   TSilverCntlrTransitionAddon<> wrappers). Their vtables hold 271 method pointers, of which **182
   appear only in Voice Memos vtables**.
 - `ghidra_scripts/FuncSizes.java` (v6 program): 84 of those are recognised functions, totalling
@@ -1271,7 +1271,7 @@ SORC 98 KB, StrT 64 KB, Str 43 KB, and so on.
   - `TCVoiceMemosIdle[68]` 0x080b8ad8 (116 bytes)
   - Avoid TVoiceMemosModel methods (for example 0x0803de08, 160 bytes): models may be created at boot.
 - So **about 1.6 KB** is available just from controller methods that run only inside the Voice Memos
-  screens. That's enough for photo registration (est. 0.5–1 KB). To make it safe, the way into Voice
+  screens. That's enough for photo registration (est. 0.5â€“1 KB). To make it safe, the way into Voice
   Memos (its menu item's handler) should be cut so those screens can never open.
 
 ## 27. Photo + clip: getting photos into Camera Roll through the recorder
@@ -1311,50 +1311,50 @@ original path = adds r5,#0xff; adds r5,#5; return to 0x080c8606 (state == 2 chec
 After an iTunes sync of the 10 `placeholders/slot_NN.jpg` files, the library is at **`D:\Photos`**
 (not iPod_Control). It's backed up in `firmware/photos-db/`.
 
-- `Photo Database` (mhfd, 11,708 bytes). Each photo is an `mhii` (ids 100–109) with 4 `mhni` children
+- `Photo Database` (mhfd, 11,708 bytes). Each photo is an `mhii` (ids 100â€“109) with 4 `mhni` children
   `{format, offset, size, geometry}` plus an mhod type 3 file name (`:Thumbs:F####_1.ithmb`).
 
 | File | Format | Contents | Slot stride |
 |---|---|---|---|
-| F1087_1.ithmb | 0x43f | 384×384 RGB565, letterboxed (geom 0,48,384,336) | 0x48000 (294,912 bytes) |
-| F1081_1.ithmb | 0x439 | **a baseline JPEG, 640×480**, letterboxed; variable size (21–26 KB) in a fixed 0x4b000 (307,200-byte) slot | 0x4b000 |
-| F1079_1.ithmb | 0x437 | 80×80 RGB565 | 0x3200 |
-| F1066_1.ithmb | 0x42a | 64×64 RGB565 | 0x2000 |
+| F1087_1.ithmb | 0x43f | 384Ã—384 RGB565, letterboxed (geom 0,48,384,336) | 0x48000 (294,912 bytes) |
+| F1081_1.ithmb | 0x439 | **a baseline JPEG, 640Ã—480**, letterboxed; variable size (21â€“26 KB) in a fixed 0x4b000 (307,200-byte) slot | 0x4b000 |
+| F1079_1.ithmb | 0x437 | 80Ã—80 RGB565 | 0x3200 |
+| F1066_1.ithmb | 0x42a | 64Ã—64 RGB565 | 0x2000 |
 
 - F1087, F1079 and F1066 are the same formats as the Camera Roll DAT thumbnails (camroll.py makes them).
-- **F1081 is just a JPEG.** The camera's own 640×480 JPEGs (45–190 KB) fit the 300 KB slot. The
+- **F1081 is just a JPEG.** The camera's own 640Ã—480 JPEGs (45â€“190 KB) fit the 300 KB slot. The
   DB's size field would need raising (from the PC tool) so larger JPEGs aren't truncated.
 - **Format-use test:** slot 01 (id 100) was relabelled on the iPod: F1087 = "87" on blue, F1081 = "81"
   JPEG on red, F1079 = "79" on green, F1066 = "66" on purple. Viewing it shows which file feeds the
   grid and the full-screen view. Not checked yet.
 
-**Format-use result:** grid thumbnail = **F1066 (64×64)**; full screen = **F1087 (384×384)**.
+**Format-use result:** grid thumbnail = **F1066 (64Ã—64)**; full screen = **F1087 (384Ã—384)**.
 F1081 (the JPEG) and F1079 weren't seen; they're probably TV out or other views.
 So the on-device writer needs F1087 and F1066 only.
 
 **Plan:** the encoder's debug-dump call `FUN_08106838(path, raw, w, h)` at 0x080f55da is the hook.
 It gets the raw frame before JPEG compression. Point it at a new writer that converts and downscales
-into slot = the PIC number, at offsets n×0x48000 (F1087) and n×0x2000 (F1066). Code is about
-300–450 bytes, so it needs the Voice Memos donor space (section 26).
+into slot = the PIC number, at offsets nÃ—0x48000 (F1087) and nÃ—0x2000 (F1066). Code is about
+300â€“450 bytes, so it needs the Voice Memos donor space (section 26).
 
-**Step 1, raw format:** `patches/yuv_dump_test.py` → `firmware/n5g-yuv-dump-test.dfu`. That's the
+**Step 1, raw format:** `patches/yuv_dump_test.py` â†’ `firmware/n5g-yuv-dump-test.dfu`. That's the
 photo firmware plus the debug flag 0x08550950 set to 1, so each photo also writes PIC_NNNN.yuv
 (the frame, byte-swapped in 16-bit pairs). Not tested yet.
-**v1 result:** no .yuv was written (PIC_0015–0018.jpg only). The flag byte is read only by the encoder
+**v1 result:** no .yuv was written (PIC_0015â€“0018.jpg only). The flag byte is read only by the encoder
 (literal 0x080f5690) and nothing writes it, so it's probably zeroed at boot (bss-like).
 **v2** (`firmware/n5g-yuv-dump-test2.dfu`) was meant to NOP the `beq` at 0x080f55d0, but a failed script
-edit meant it was **built as v1 again** (no .yuv; PIC_0019–0022). The photos' EXIF ("Yuiop", "FW 1.0.2
+edit meant it was **built as v1 again** (no .yuv; PIC_0019â€“0022). The photos' EXIF ("Yuiop", "FW 1.0.2
 (34A20020) Sens R2.1") confirms FUN_080f533c is the encoder. **v3** (`firmware/n5g-yuv-dump-test3.dfu`)
 really has the NOP (checked by disassembly). Not tested yet.
 
-**v3 result: it works.** PIC_0023–0028 each got a 614,400-byte .yuv (backed up in `firmware/yuv/`).
+**v3 result: it works.** PIC_0023â€“0028 each got a 614,400-byte .yuv (backed up in `firmware/yuv/`).
 - The .yuv file decodes as **UYVY** (mean squared error 4 against the JPEG, which is compression
   noise; every other order is >1400). The dump swaps 16-bit pairs before writing, so **in memory the
-  frame is YUYV** (Y0 U Y1 V), 640×480, row-major, landscape (the same orientation as the stored JPEG).
-- Displaying it upright needs a 90° rotation (the JPEG uses EXIF orientation for this).
+  frame is YUYV** (Y0 U Y1 V), 640Ã—480, row-major, landscape (the same orientation as the stored JPEG).
+- Displaying it upright needs a 90Â° rotation (the JPEG uses EXIF orientation for this).
 - So the slot writer (hooked at 0x080f55da with r0 = path, r1 = frame, r2 = 640, r3 = 480) must:
-  read YUYV, convert to RGB565, rotate 90°, and downscale to 288×384 inside 384×384 (F1087) and to
-  64×64 (F1066). Note the dump modified the live buffer in place, but only after the JPEG was encoded.
+  read YUYV, convert to RGB565, rotate 90Â°, and downscale to 288Ã—384 inside 384Ã—384 (F1087) and to
+  64Ã—64 (F1066). Note the dump modified the live buffer in place, but only after the JPEG was encoded.
 
 ## 29. The Photos-slot writer
 
@@ -1362,12 +1362,12 @@ really has the NOP (checked by disassembly). Not tested yet.
 
 | Address | Change |
 |---|---|
-| 0x082003dc | Voice Memos entry (the only callee of both HandleVoiceMemosSelected branches): `push {r4,lr}` → `bx lr`. Voice Memos can no longer open. |
-| 0x080f55d0 | Debug-dump flag check → NOP |
-| 0x080f55da | Debug-dump call → `bl WRITE_SLOTS` (r0 = path, r1 = YUYV frame) |
-| 0x080bc69c | **WRITE_SLOTS**, 260/302 bytes (TCVoiceMemosMainMenu[85]). slot = PIC number mod SLOTS (10). Writes F1087 (384 rows: frame rotated 90° CW, 288×384 at x = 48, black bars) and F1066 (64 rows from the centre 480² square) through a 768-byte row buffer on the stack (frame 796 bytes, sp kept 8-aligned). |
-| 0x080a9224 | **PIX**, 182/184 bytes (TCVoiceMemosLabelSelectMenu[68]): YUYV → RGB565 (R = Y + 359v/256, G = Y − (88u + 183v)/256, B = Y + 454u/256, clamped), plus the two path strings. |
-| 0x080a8548 | **OPEN_SEEK / WRITE_ROW / CLOSE**, 100/184 bytes (TCVoiceMemosContextMenu[68]). Open with `FUN_0827f35c(new(0x54), path, 0, 0, [0x400, 1, 0])`; seek with `FUN_0827ddec(f, _, slot × stride, 0, [0])`, closing and skipping if that fails; write with `FUN_0823b61a(f, len, row, &written)`; close with `f->vtable[1](f)`. |
+| 0x082003dc | Voice Memos entry (the only callee of both HandleVoiceMemosSelected branches): `push {r4,lr}` â†’ `bx lr`. Voice Memos can no longer open. |
+| 0x080f55d0 | Debug-dump flag check â†’ NOP |
+| 0x080f55da | Debug-dump call â†’ `bl WRITE_SLOTS` (r0 = path, r1 = YUYV frame) |
+| 0x080bc69c | **WRITE_SLOTS**, 260/302 bytes (TCVoiceMemosMainMenu[85]). slot = PIC number mod SLOTS (10). Writes F1087 (384 rows: frame rotated 90Â° CW, 288Ã—384 at x = 48, black bars) and F1066 (64 rows from the centre 480Â² square) through a 768-byte row buffer on the stack (frame 796 bytes, sp kept 8-aligned). |
+| 0x080a9224 | **PIX**, 182/184 bytes (TCVoiceMemosLabelSelectMenu[68]): YUYV â†’ RGB565 (R = Y + 359v/256, G = Y âˆ’ (88u + 183v)/256, B = Y + 454u/256, clamped), plus the two path strings. |
+| 0x080a8548 | **OPEN_SEEK / WRITE_ROW / CLOSE**, 100/184 bytes (TCVoiceMemosContextMenu[68]). Open with `FUN_0827f35c(new(0x54), path, 0, 0, [0x400, 1, 0])`; seek with `FUN_0827ddec(f, _, slot Ã— stride, 0, [0])`, closing and skipping if that fails; write with `FUN_0823b61a(f, len, row, &written)`; close with `f->vtable[1](f)`. |
 
 **Verified in emulation:** `tests/emulate_photos_slot.py` runs the three blocks in Unicorn, with
 Python stubs for new/open/seek/write/close, on firmware/yuv/PIC_0027.yuv. Both outputs match a numpy
@@ -1378,20 +1378,20 @@ pictures are upright, letterboxed and correctly coloured. (It takes about 100 s,
 (backups are in firmware/photos-db/; a truncated file makes the seek fail, so the writer skips it);
 whether the Photos app caches thumbnails; and timing (the write happens on the encoder thread).
 
-**🎉 Device result (2026-11-06): it works.** PIC_0029 (20:38) showed up as placeholder #10 (slot 9) in the
+**ðŸŽ‰ Device result (2026-11-06): it works.** PIC_0029 (20:38) showed up as placeholder #10 (slot 9) in the
 stock Photos app, both as the grid thumbnail and full screen. All four .ithmb files kept their sizes,
 so opening for writing does **not** truncate. Slot 9 of F1087 read back from the iPod is the upright
 photo, letterboxed. No caching problem: it appeared without a reboot. The library after the test is
 backed up in firmware/photos-db-after/.
 
 **200-slot version:**
-- `placeholders/` now holds slot_001…slot_200.jpg: blank black 30×40 (still 3:4 portrait, so iTunes
+- `placeholders/` now holds slot_001â€¦slot_200.jpg: blank black 30Ã—40 (still 3:4 portrait, so iTunes
   uses the same letterbox geometry), 651 bytes each. Each slot still costs about 610 KB on the iPod.
 - The writer now computes `slot = (PIC number + offset) mod slots`, with
   `offset = default_offset(slots, next_number)` so the next photo lands in slot 0 (top of the grid).
 - Emulated PIC_0031 with 200 slots and next = 30: lands in slot 1 (0x48000 / 0x2000), bit-exact.
-- `firmware/n5g-photos-slot200.dfu` = `photos_slot.py … 200 0` (rebuilt after the user deleted the
-  old PIC_ photos, so numbering restarts at PIC_0000): **PIC_0000 → slot 0**, offset 0.
+- `firmware/n5g-photos-slot200.dfu` = `photos_slot.py â€¦ 200 0` (rebuilt after the user deleted the
+  old PIC_ photos, so numbering restarts at PIC_0000): **PIC_0000 â†’ slot 0**, offset 0.
 
 **Shrinking the library:** `nanocam/photodb.py` (`image_refs`, `compact`). It packs one format's
 pictures tightly, at 512-byte alignment, and rewrites the mhni offsets (test: `tests/test_photodb.py`).
@@ -1403,8 +1403,8 @@ JPEGs still decode. The library is now about 64.9 MB (was about 124.6 MB). The p
 ### 29a. Hiding unused placeholders (album-count test)
 
 Photo Database structure (200-slot library):
-- mhfd → mhsd(1) → **mhli** (image list; its third word = 200 images)
-- mhsd(2) → **mhla** (1 album) → **mhba** at 0x308fc: +12 = 1 data object, **+16 = item count (200)**,
+- mhfd â†’ mhsd(1) â†’ **mhli** (image list; its third word = 200 images)
+- mhsd(2) â†’ **mhla** (1 album) â†’ **mhba** at 0x308fc: +12 = 1 data object, **+16 = item count (200)**,
   +20 = album id 0x13b, then 200 `mhia` entries
 
 **Test:** set the mhba item count at **0x3090c** from 200 to 3 (the compacted DB was backed up first as
@@ -1415,7 +1415,7 @@ the count. So hiding by count alone doesn't work. Restoring the count to 200.
 
 ## 30. Hiding the recording overlay in Photo Camera
 
-- The camera screen is SUse 0x0dad0618. It uses VCvs 0x0dad1648 (layout override → SORC 0x1a8,
+- The camera screen is SUse 0x0dad0618. It uses VCvs 0x0dad1648 (layout override â†’ SORC 0x1a8,
   Camera_Screen_Active), View/TMLT 0x0dad1470 (752 bytes, the main screen) and **View/TMLT 0x0dad14bd**
   (396 bytes) = a 3-element overlay:
 
@@ -1427,9 +1427,9 @@ the count. So hiding by count alone doesn't work. Restoring the count to 200.
 
   This is probably the record dot and the timer. Each tag is followed by a word 0x00010000 (offsets
   0x048, 0x0cc, 0x150), probably flags.
-- The timer text is formatted by `FUN_081b15f8` ("%02d:%02d:%02d…"), reached via the wrapper
+- The timer text is formatted by `FUN_081b15f8` ("%02d:%02d:%02dâ€¦"), reached via the wrapper
   FUN_0804dc14 in camera app code.
-- **Test:** `patches/hide_rec_overlay_test.py` → `firmware/n5g-hide-overlay-test.dfu` is photos_slot200
+- **Test:** `patches/hide_rec_overlay_test.py` â†’ `firmware/n5g-hide-overlay-test.dfu` is photos_slot200
   plus those three words set to 0, in **both** modes (body offsets 0x67c140 / 0x67c1c4 / 0x67c248).
   **Result: the timer and dot were still there** (the labels worked). Either it's the wrong view or
   the wrong field.
@@ -1439,9 +1439,9 @@ the count. So hiding by count alone doesn't work. Restoring the count to 200.
 - The photo item's main-menu label (the spare Str 0x0dad094f) is now **"Camera"** (it was "Photo Camera").
 - The home screen's split-screen camera preview text is **Str 0x0dad0bff** "Video Camera". It's used
   through SORC 0x322 in preview View 0x0dad14e8 (the 264-byte main-menu preview panes are
-  0x0dad14e6–0x0dad14f8). It's now **"Camera"**, which shows for both camera items.
+  0x0dad14e6â€“0x0dad14f8). It's now **"Camera"**, which shows for both camera items.
 - Unchanged: Str 0x0dad0946 "Video Camera" (the Video Camera item, CLov 0x0dad1159, plus
-  CLov 0x0dad11d4, probably the Settings → Main Menu list). Str 0x0dad0a67 "Video Camera" has no
+  CLov 0x0dad11d4, probably the Settings â†’ Main Menu list). Str 0x0dad0a67 "Video Camera" has no
   resource reference that I've found.
 - photo_mode.py now expects 5 menu patches. Rebuilt n5g-photos-slot200.dfu (15 patches) and
   n5g-hide-overlay-test.dfu (18 patches) with the new labels.
@@ -1450,7 +1450,7 @@ the count. So hiding by count alone doesn't work. Restoring the count to 200.
   source: kind 0xa480, value 0xa488). The dot is probably imag 0x0dad1c87 (+0x22c). Their post-tag
   words are 0x00010000 / 0x00010100. v2 (`firmware/n5g-hide-overlay-test2.dfu`) clears bit 0x00010000
   in both. **Result: still there.** So bit 0x00010000 isn't visibility (or it's the wrong element).
-- **v3 test (positive identification):** `patches/timer_binding_test.py` → `firmware/n5g-timer-binding-test.dfu`
+- **v3 test (positive identification):** `patches/timer_binding_test.py` â†’ `firmware/n5g-timer-binding-test.dfu`
   rebinds VCvs 0x0dad1648 +0x18 from SORC 0x1a8 (live) to SORC 0x399 ("Video Camera" text).
   **Result: no change.** Text 0x0dad1c88 isn't the timer (or that binding isn't what feeds it). The
   timer and dot are probably drawn by another view (status bar?) or by code. Next: get a photo of the
@@ -1463,7 +1463,7 @@ the count. So hiding by count alone doesn't work. Restoring the count to 200.
 - COLR resources are 4-byte RGBA (148 of them). The badge's colours are 0x0dad0012 = ffffffff (white,
   probably an image tint), 0x0dad0028 = 000000ff and 0x0dad0013 = 000000ff. **0x0dad001a = 00000000
   (transparent).**
-- **v4 test:** `patches/hide_badge_test.py` → `firmware/n5g-hide-badge-test.dfu` repoints the badge
+- **v4 test:** `patches/hide_badge_test.py` â†’ `firmware/n5g-hide-badge-test.dfu` repoints the badge
   view's three colour refs (+0x5c, +0xe0, +0x168) to 0x0dad001a, in both modes. **Result: still there.**
   So View 0x0dad14bd probably isn't what's drawn (another orientation or layout copy?).
 - Only one view in the database has the badge pattern (2 imag + text, Helvetica): 0x0dad14bd, used
@@ -1480,11 +1480,11 @@ the count. So hiding by count alone doesn't work. Restoring the count to 200.
   the accelerometer for stills.**
 - Screen rotation: `*(u32*)(FUN_081ab630() + 0x290)` = 0 / 90 / 180 / 270 degrees. The camera's
   rotation handler (HandleScreenRotation in FUN_082117ec) copies it via FUN_080e5d66 into cam+0x13c
-  (90→4, 180→2, 270→3, else 1).
+  (90â†’4, 180â†’2, 270â†’3, else 1).
 - The camera's JPEGs always keep EXIF orientation as a big-endian u16 at **byte 54** (checked on 8 photos).
 - Writer changes (photos_slot.py):
   - **SETUP** (region D) stores the path and `flip = (rotation == 180)` in the writer's frame (FLIP at sp+792, PATH at sp+796; frame 804 bytes)
-  - **PIXF** (region C) mirrors sampling coordinates (x → 639 − x, y → 479 − y) when flipped, so the slot gets a 90° anticlockwise rotation
+  - **PIXF** (region C) mirrors sampling coordinates (x â†’ 639 âˆ’ x, y â†’ 479 âˆ’ y) when flipped, so the slot gets a 90Â° anticlockwise rotation
   - **FINISH / FIX_EXIF** (region D, TCVoiceMemosTimedStatus[68] 0x080a887c, 152/184 bytes) writes 0x08 at byte 55 of the JPEG
   - Sizes: WRITE_SLOTS 272/302, PIX 182/184, helpers 132/184.
 - Emulated with the UI angle at 0 and at 180: both match the reference; EXIF is untouched or set to 8 as expected.
@@ -1536,11 +1536,11 @@ Portrait upright and upside down were confirmed on the iPod (section 32). This a
   (the key-pointer table for all settings is around 0x08550b60).
 - **Who reads it:** only three places, each `...; ldrb r0,[r3]; cmp r0,#0; beq skip`:
   0x08088308, 0x080b7b60, 0x080bd344 (rotate-to-Cover-Flow logic).
-- **Colours.** Code fetches a resource with `FUN_081a3f86(manager, type, id)` → pointer to its data
+- **Colours.** Code fetches a resource with `FUN_081a3f86(manager, type, id)` â†’ pointer to its data
   (`manager = FUN_081a3f7c()`; it walks a manager chain calling vtable[0x74](mgr, type, id, &out)).
-  Colour users then read the RGBA word straight from that pointer (0x08040f86, 0x0802e17a, 0x0809dd54, …).
+  Colour users then read the RGBA word straight from that pointer (0x08040f86, 0x0802e17a, 0x0809dd54, â€¦).
   254 call sites in total, all types.
-- **`patches/dark_mode_toggle.py`** → `firmware/n5g-dark-toggle.dfu` (10 patches; also part of
+- **`patches/dark_mode_toggle.py`** â†’ `firmware/n5g-dark-toggle.dfu` (10 patches; also part of
   `build_full_firmware.py`):
   - the getter's tail (0x081a3faa) becomes `bl HOOK`; for type 'COLR', when General.Rotate is on, HOOK
     returns a pointer into a table of dark colours (`dark_theme_palette.COLOR_MAP`, 20 colours) instead
@@ -1548,9 +1548,9 @@ Portrait upright and upside down were confirmed on the iPod (section 32). This a
   - the row is labelled "Dark Mode" (dark_mode_setting.py)
   - space: TCVoiceMemos[68] 0x080a41a0 (HOOK, 112/184 bytes) and TCVoiceMemosIdle[68] 0x080a5834
     (tables, 101/184 bytes)
-- **Verified in emulation only** (`tests/emulate_dark_mode.py`, Unicorn, real image): off → all 148
-  colours stock; on → exactly the 20 mapped colours change; no preferences object → stock; other
-  resource types untouched; stack and r4–r7 preserved. **Not yet run on the iPod.**
+- **Verified in emulation only** (`tests/emulate_dark_mode.py`, Unicorn, real image): off â†’ all 148
+  colours stock; on â†’ exactly the 20 mapped colours change; no preferences object â†’ stock; other
+  resource types untouched; stack and r4â€“r7 preserved. **Not yet run on the iPod.**
 - **To check on the device:** whether the palette itself looks right (the COLOR_MAP choices are untested;
   backgrounds drawn from bitmaps won't change), and whether screens already open keep their old colours
   until they're rebuilt (toggling may need leaving Settings, or a restart, to show everywhere).
@@ -1567,10 +1567,10 @@ Portrait upright and upside down were confirmed on the iPod (section 32). This a
   (0x0802a94a; the manager's finder 0x0827f1c2 forwards 'BMap' to FUN_08270104). The returned object
   carries its own id at +0x18, which is what retain (FUN_081b15d8) and release (FUN_08198f34) use.
 - Static bitmap references are `SORC` records of kind 0x80 whose value is the bitmap id
-  (0x0dad01de ← SORC 0x116, 0x2b7, 0x2c5, 0x2c8; 0x0dad02e5 ← 11 SORCs; 0x0dad0572 ← 9 SORCs).
+  (0x0dad01de â† SORC 0x116, 0x2b7, 0x2c5, 0x2c8; 0x0dad02e5 â† 11 SORCs; 0x0dad0572 â† 9 SORCs).
 - **Fix in dark_mode_toggle.py:** for type 'BMap', when Dark Mode is on and the id is in LIGHT_BITMAPS
-  (01de, 02e5, 053e–0540, 0553–0555, 0544, 055a), HOOK looks up **0x0dad0572** (stock dark gradient,
-  240×376) instead. Because the swap returns the dark bitmap's own object, refcounts stay right even
+  (01de, 02e5, 053eâ€“0540, 0553â€“0555, 0544, 055a), HOOK looks up **0x0dad0572** (stock dark gradient,
+  240Ã—376) instead. Because the swap returns the dark bitmap's own object, refcounts stay right even
   if the setting changes while a screen holds it. HOOK 152/184 bytes, tables + DARK() 168/184 bytes.
 - Emulated (off / on / dark bitmap missing / no preferences). **Not yet run on the iPod.**
 - Unknowns: LIGHT_BITMAPS was chosen from the few extracted previews (`firmware/slice_*.png`), so other
@@ -1580,8 +1580,8 @@ Portrait upright and upside down were confirmed on the iPod (section 32). This a
 ### 34b. The menu's white background is the table element's fallback colour
 
 - **Second on-device result:** with the bitmap swap, the background was **still white**.
-- View element factories are registered by tag (FUN_081aaf6c): `list` → 0x0802b8e4, `tabl` → 0x0802c210,
-  `grad` → 0x0802efd0, `text` → 0x0802bd7c.
+- View element factories are registered by tag (FUN_081aaf6c): `list` â†’ 0x0802b8e4, `tabl` â†’ 0x0802c210,
+  `grad` â†’ 0x0802efd0, `text` â†’ 0x0802bd7c.
 - Nearly every menu screen uses **View 0x0dad1474** (imag 1c96, imag 1c97, `tabl` 1c98; in about 140 SUse
   lists). Its rows are separate cell views chosen by `TVCS` records `{id, View, VLyt normal, VLyt hilite}`
   (0x0dad1492 etc.: two `text` + one `imag`; text colour COLR 0x13 normally, **0x12 when highlighted**).
@@ -1590,7 +1590,7 @@ Portrait upright and upside down were confirmed on the iPod (section 32). This a
   starts from `ff ff ff ff`, replacing it only if the lookup succeeds; the 4 bytes go to table object
   +0x170. View 0x0dad1474's table has COLR id 0, so the lookup fails and the table is opaque white.
 - `list` elements differ: they carry inline ARGB values (tag +0x34 = ffffffff, then the blue highlight
-  gradient ff4289f6 / ff184d99 …) and only look up a COLR if element +0x50 is non-zero. 16 views; **not
+  gradient ff4289f6 / ff184d99 â€¦) and only look up a COLR if element +0x50 is non-zero. 16 views; **not
   handled yet**.
 - **COLOR_MAP was wrong about whites.** Every white COLR referenced by views is a text colour or image
   tint (0x12 highlighted menu text; 0x18, 0x74, 0x84, 0x89, 0xa1 white text on dark screens). Those six
@@ -1603,24 +1603,24 @@ Portrait upright and upside down were confirmed on the iPod (section 32). This a
 
 - On the iPod the table-fallback fix works: menus are dark. The status bar was still silver.
 - `firmware/SilverImagesDB.LE.bin` is now in the repo. Format: header `{3, data_start, 1, 'BMap', count, 1, 0x1c}`,
-  then `count` × `{id, offset, size}`; each image is `{u16 fmt, u16 ?, u16 stride, u16 bpp, …, u32 height @0x10,
-  u32 width @0x14, u32 id @0x18, u32 data_size @0x1c}`, then for fmt 0x64/0x65 a palette (`u32 n`, n × BGRA) and
+  then `count` Ã— `{id, offset, size}`; each image is `{u16 fmt, u16 ?, u16 stride, u16 bpp, â€¦, u32 height @0x10,
+  u32 width @0x14, u32 id @0x18, u32 data_size @0x1c}`, then for fmt 0x64/0x65 a palette (`u32 n`, n Ã— BGRA) and
   8/16-bit indices; fmt 0x1888 is raw BGRA.
 - The status bar is View 0x0dad1470 (silver; ~255 screens reference it through SUse) or View 0x0dad1471 (dark; Now
-  Playing etc.). The two views are byte-identical except element ids, the image SORCs (0x4c–0x50 vs 0x51–0x55), one
+  Playing etc.). The two views are byte-identical except element ids, the image SORCs (0x4câ€“0x50 vs 0x51â€“0x55), one
   `stsp` flag and the title colour (COLR 0x13 vs 0x54). The views can't simply be swapped: VCvs/VLyt resources bind
   to the element ids (title text 0x0dad1c88 vs 0x0dad1c8e).
-- SORC 0x4c = constant bitmap 0x0dad0129 (320×20 silver gradient); SORC 0x51 = 0x0dad030c (1×20, 5e5e5e → 171717).
-  SORCs 0x4d–0x4f / 0x52–0x54 are dynamic sources (0xa100/0x9a00/0x9f80 with a light/dark selector); SORCs are not
-  fetched through FUN_081a3f86 (they go through the resource-handle path FUN_081b23a4 → FUN_0830125c), so the hook
+- SORC 0x4c = constant bitmap 0x0dad0129 (320Ã—20 silver gradient); SORC 0x51 = 0x0dad030c (1Ã—20, 5e5e5e â†’ 171717).
+  SORCs 0x4dâ€“0x4f / 0x52â€“0x54 are dynamic sources (0xa100/0x9a00/0x9f80 with a light/dark selector); SORCs are not
+  fetched through FUN_081a3f86 (they go through the resource-handle path FUN_081b23a4 â†’ FUN_0830125c), so the hook
   can't swap them. Their bitmaps do come through the hook.
-- Battery bitmaps: 0x0dad0143–0x159 (green, for the silver bar) + 0x15a/0x15b (charging glyphs); the dark bar's
-  white set is the same 25 images at +0x19 (0x15c–0x174). The +0x19 pairing is inferred from the layout of the ids
+- Battery bitmaps: 0x0dad0143â€“0x159 (green, for the silver bar) + 0x15a/0x15b (charging glyphs); the dark bar's
+  white set is the same 25 images at +0x19 (0x15câ€“0x174). The +0x19 pairing is inferred from the layout of the ids
   and the look of the images, not traced through code.
-- Hook change: the bitmap table is now ranges `{first, last, dark, step}` (dark id = dark + step × (id − first)),
-  stored in the NOT_FOUND region. Added 0x129 → 0x30c and 0x143..0x15b → 0x15c... Other status icons (play state,
+- Hook change: the bitmap table is now ranges `{first, last, dark, step}` (dark id = dark + step Ã— (id âˆ’ first)),
+  stored in the NOT_FOUND region. Added 0x129 â†’ 0x30c and 0x143..0x15b â†’ 0x15c... Other status icons (play state,
   lock, pedometer shoe) keep their silver-bar versions.
-- `DARK_BACKGROUND` 121212 → 363636 (closer to the iPod classic's dark grey).
+- `DARK_BACKGROUND` 121212 â†’ 363636 (closer to the iPod classic's dark grey).
 - Region clash: `photos_slot.py` (landscape photos, section 33, written on another machine) took
   TCVoiceMemosIdle[68] 0x080a5834 as its region E, which was this patch's table region. The tables moved to
   TCVoiceMemosMainMenu[68] 0x080a753c..0x080a75f4. All seven controller [68] slots are now used.
@@ -1755,3 +1755,17 @@ Portrait upright and upside down were confirmed on the iPod (section 32). This a
 - Patch: 0x081aa220 (movs r2,#0; str r2,[sp]) -> `bl CF_HOOK`: while Dark Mode is on, grey = grey * 0x24 >> 8 (255 -> 0x23). Emulated: ffffffff -> 232323ff, 808080 -> 121212, stock when off.
 - COLOR_MAP: 0x3f (title/artist) is light again and 0x44 (3b3b3b secondary text) -> b0b0b0, both only used by View 0x0dad14cc.
 - Unknown on the iPod: how the cover reflections look on dark (they may fade through a white overlay), and whether the same clear is used by other 3D screens. Not tested on the iPod yet.
+
+### 34l. Cover Flow track list: row stripes and text (2026-11-16 to 2026-11-19)
+
+Result on the iPod with Dark Mode on: every row dark grey, song titles and times white, selection bar unchanged. Build: `python patches/build_full_firmware.py firmware/n5g-retailos.dec firmware/nanocam.dfu`.
+
+- The rows are painted by the `list` class (vtable 0x08535ffc, built by FUN_0802b8e4) in FUN_0808d718(list, ctx, rect, row, ?, selected, ?). For an unselected row, when list+0x14c bit 18 is set, even rows are filled with a hard-coded #f2f2f2 (0x0808d79a `movs r0,#0xf2`); odd rows are skipped by `bne 0x0808d7ae` at 0x0808d796 and show whatever is behind the list (the "white boxes" that were left after only the even rows were fixed). The row's cell prototype (list+0x114 / +0x118) is then drawn with cell->vtable[0x84].
+- **STRIPE** (tables region): 0x0808d798 (`mov r3,sp; movs r0,#0xf2`) -> `bl STRIPE`, and the `bne` at 0x0808d796 is a nop, so every row reaches it. Dark Mode on: even rows 0x4a, odd rows 0x3a. Off: even rows 0xf2, odd rows return 0x12 past the hook to the old `bne` target (no fill). It reads the row number from the painter's `[sp,#0x98]` (+8 for its own push of two words, which keeps sp 8-byte aligned).
+- **Text:** the song titles and times use COLR 0x0dad0040 (black). Found with a probe build that mapped 14 unmapped dark colours to distinct bright ones and photographing the screen (titles and times came out yellow = 0x40). Mapped to f0f0f0 in COLOR_MAP like the other black text colours.
+- **What did not work, and why (so it isn't tried again):**
+  - Drawing unselected rows in the highlighted state (FUN_0820b6a0(cell,1) around the cell draw) makes the text white but also shows the selection bar on every row; highlighting only the cell (FUN_081b961c) changes nothing, the text and bar are in its child elements.
+  - The first version of that hook replaced `blx r3; add sp,#0x9c` at 0x0808d7d8 with a `bl`. Two other paths of the painter (0x0808d8ba, 0x0808d99e) branch to the `add sp,#0x9c` at 0x0808d7da, so they ran half a `bl` and crashed the iPod when an album opened. Lesson: check for branches into the middle of a patched site before overwriting 4 bytes.
+  - The "blue gradient behind the album title" (header of the flip side) is not: COLR 0x42 (tint of the view's first image), the view's second image element (colour id 0 -> 0x43), the six inline ARGB colours of the `list` element after the first two (+0x314..+0x328 of View 0x14cd/14ce are the selection bar's edges and unused colours; +0x30c/+0x310 are the selection gradient), nor bitmap 0x0dad01a7 (the only wide blue bitmap in the image DB). The three `imag` elements of the view all use SORC 0xaf (bitmap 0x0dad0990, which is not in SilverImagesDB), probably a runtime-assigned texture. Unsolved.
+- Testing note: copy each test file to the Pi under its own name and compare `sha256sum`; for a while the same file was flashed under several names, which made the experiments meaningless.
+- tests/emulate_row_painter.py runs the real painter in Unicorn with the callees stubbed (colours, stack balance, registers, sp alignment, odd/even and selected rows).

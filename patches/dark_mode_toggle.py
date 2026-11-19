@@ -64,7 +64,6 @@ from nanocam.patch import Patch, apply, string_patch_at  # noqa: E402
 from nanocam.resources import ResourceDB  # noqa: E402
 import dark_mode_setting as dm  # noqa: E402
 from dark_theme_palette import COLOR_MAP  # noqa: E402
-
 BASE = 0x07FD1D84
 
 # firmware
@@ -214,8 +213,11 @@ SET_COLOUR = 0x08273A1C          # glColor4f wrapper (r, g, b, a floats)
 LIST_COLOUR = 0x081B2100
 LIST_COLOUR_CALLS = (0x0802BA6A, 0x0802BA80, 0x0802BA96, 0x0802BAAE)
 LIST_COLOUR_SET = 0x081B2110     # FUN_081b2110(dst, colour object): assigns it (used for the panel at +0x7c)
-TPL_MEMCPY_CALLS = (0x0802BBD8, 0x0802BBFC)   # blx memcpy of the two row-layer templates
-TPL_COLOUR = 0xFF2A2A2A
+# The list's row painter FUN_0808d718(list, ctx, rect, row, ?, selected, ?) (see STRIPE and ROWDRAW).
+ROW_STRIPE_SITE = 0x0808D798     # mov r3,sp; movs r0,#0xf2: the even-row stripe colour (#f2f2f2)
+ROW_STRIPE_DARK = 0x4A           # even-row grey level with Dark Mode on
+ROW_ODD_DARK = 0x3A              # odd-row grey level with Dark Mode on (stock: no fill)
+ROW_PARITY_BRANCH = 0x0808D796   # bne 0x0808D7AE: odd rows skip the fill (patched to a nop)
 LIST_BG_SITE = 0x0802B9CE        # `ldr r0,[sp,#0x258]; ldr r1,[r5,#0x30]`, the common point after the COLR path
 
 POP_RET = t.pop([3, 4, 5, 6, 7], pc=True)   # GET_RESOURCE's own epilogue
@@ -277,20 +279,31 @@ def build_tables(base: int) -> tuple[bytes, dict[str, int]]:
     s("k_lid2"); s(struct.pack("<I", 0x0DAD1E0C))
     s("k_listbg"); s(struct.pack("<I", 0xFF242424))
 
-    # TPLCOPY: stands in for the `blx memcpy(dst, template, 0x60)` that copies a row-layer template onto the
-    # stack in the list factory. After the copy, with Dark Mode on, the layer's colour word (+0xc, white)
-    # is set to dark grey. (Patching the template data in the image made the iPod boot stock firmware.)
-    s("TPLCOPY")
-    s(t.push([4], lr=True)); s(t.mov_lo(4, 0))
-    lit(3, "k_memcpy"); s(t.blx_reg(3))
+    # (TPLCOPY, which recoloured the row-layer templates, was removed: see toggle_patches.)
+
+    # STRIPE: stands in for `mov r3,sp; movs r0,#0xf2` at ROW_STRIPE_SITE in the list's row painter
+    # FUN_0808d718, which fills every even unselected row with #f2f2f2 (the "white boxes" of Cover Flow's
+    # track list). Out: r0 = the grey level (ROW_STRIPE_DARK with Dark Mode on), r3 = the caller's sp.
+    # The painter skips the fill for odd rows (`bne` at ROW_PARITY_BRANCH, patched out so every row gets here),
+    # which therefore show whatever is behind the list: the "white boxes" that were still left. With Dark Mode
+    # on, odd rows are filled too (ROW_ODD_DARK); with it off they return to the `bne`'s old target, 0x12 past.
+    s("STRIPE")
+    # Two words are pushed (r1, lr) so sp stays 8-byte aligned, as the callees may use ldrd/strd.
+    s(t.push([1], lr=True))
     R(4, lambda a, L: t.bl(a, L["DARK"]))
-    s(t.cmp_imm(0, 0)); R(2, lambda a, L: t.bcond("eq", a, L["tc_out"]))
-    lit(1, "k_tpl"); s(t.str_imm(1, 4, 0xC))
-    s("tc_out")
-    s(t.pop([4], pc=True))
-    s("align4")
-    s("k_memcpy"); s(struct.pack("<I", 0x082002C4))
-    s("k_tpl"); s(struct.pack("<I", TPL_COLOUR))
+    s(t.ldr_sp(1, 0xA0)); s(t.lsls_imm(1, 1, 31))                  # the row number (the painter's [sp,#0x98]); Z = even
+    R(2, lambda a, L: t.bcond("ne", a, L["st_odd"]))
+    s(t.movs_imm(1, 0xF2)); s(t.cmp_imm(0, 0)); R(2, lambda a, L: t.bcond("eq", a, L["st_out"]))
+    s(t.movs_imm(1, ROW_STRIPE_DARK)); R(2, lambda a, L: t.b(a, L["st_out"]))
+    s("st_odd")
+    s(t.cmp_imm(0, 0)); R(2, lambda a, L: t.bcond("eq", a, L["st_skip"]))
+    s(t.movs_imm(1, ROW_ODD_DARK))
+    s("st_out")
+    s(t.mov_lo(0, 1))
+    s(t.pop([1, 2])); s(t.add_sp_rd(3, 0)); s(t.bx(2))
+    s("st_skip")
+    s(t.pop([1, 2])); s(t.adds_imm(2, 0x12)); s(t.add_sp_rd(3, 0)); s(t.bx(2))
+
     s("align4")
     s("k_prefs"); s(struct.pack("<I", PREFS_SLOT))
     s("k_key"); s(struct.pack("<I", KEY_ROTATE))
@@ -612,6 +625,9 @@ def toggle_patches(body: bytes, cut_voice_memos: bool = False) -> list[Patch]:
     # (Removed: patching these two words made the iPod boot stock firmware, no Dark Mode or camera.)
     # TPLCOPY (row-layer template word +0xc) not applied: it is probably a -1 "none" handle, not a colour, and
     # changing it made the iPod boot stock firmware.
+    # Cover Flow track list rows: dark stripes on even and odd rows (see STRIPE).
+    patches.append(Patch(ROW_STRIPE_SITE - BASE, bytes.fromhex("6b46f220"), t.bl(ROW_STRIPE_SITE, tl["STRIPE"])))
+    patches.append(Patch(ROW_PARITY_BRANCH - BASE, bytes.fromhex("0ad1"), bytes.fromhex("c046")))
     patches.append(Patch(REFL_CALL - BASE, t.bl(REFL_CALL, REFL_DRAW), t.bl(REFL_CALL, tl["REFL_SKIP"])))
     patches.append(Patch(CF_CLEAR_GREY - BASE, t.movs_imm(2, 0) + t.str_sp(2, 0), t.bl(CF_CLEAR_GREY, tl["CF_HOOK"])))
     patches.append(Patch(VMAX_ID_CHECK - BASE, bytes.fromhex("11498842"), t.bl(VMAX_ID_CHECK, tl["VMAX_HOOK"])))

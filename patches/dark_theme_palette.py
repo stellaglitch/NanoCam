@@ -46,6 +46,8 @@ COLOR_MAP = {
     0x0DAD006E: "f0f0f0ff",
     # Cover Flow title / artist (View 0x0dad14cc), now that its background goes dark too
     0x0DAD003F: "f0f0f0ff",
+    # Cover Flow track list: song titles and times (found by recolouring candidates and photographing the screen)
+    0x0DAD0040: "f0f0f0ff",
     0x0DAD0044: "b0b0b0ff",
     # The black bar at the bottom of short menus: View 0x0dad1474's second imag element (0x1c97, 240 wide,
     # no bitmap source) is tinted with COLR 0x28 (black). Same colour as the menu background instead.
