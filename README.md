@@ -33,6 +33,37 @@ as JPEG to the internal storage as separately numbered files, just like the vide
 The photos are saved at a blistering 0.3mp at 480x640 resolution which comes out to around 
 ~100-150kb per photo. 
 
+## Photo Placeholders
+
+The [placeholders](placeholders) folder holds `slot_001.jpg` to `slot_200.jpg`: 200 blank
+black JPEGs (30x40, 651 bytes each). Sync that folder to the iPod through iTunes as a photo
+folder, once, and the stock Photos app gets 200 empty pictures. Each one reserves space for a
+full-size picture and a thumbnail on the iPod (about 610 KB each before compacting).
+
+The camera patch doesn't add pictures to the library. It overwrites the reserved space of one
+placeholder per photo, so the photo shows up in Photos right away, with no sync or reboot.
+Photo `PIC_NNNN` goes into slot `(NNNN + offset) mod slots`, and the offset is chosen at build
+time so the next photo lands in the first placeholder, at the top of the grid. After the last
+slot the camera wraps around and overwrites the oldest photo.
+
+Things to know:
+
+- The firmware must be built for the number of placeholders you synced. The default is 200
+  slots and a next picture number of 0:
+
+  ```bash
+  python patches/build_full_firmware.py firmware/n5g-retailos.dec firmware/nanocam.dfu 200 0
+  ```
+
+  The last two numbers are the slot count and the number of the next photo the camera will
+  take. Change the second if the iPod already has `PIC_` files, so numbering and slots line up.
+- Placeholders you haven't used yet show up as black squares in Photos. Hiding them by changing
+  the album's item count doesn't work: the Photos app then shows no pictures at all.
+- The 200 placeholders take roughly 125 MB on the iPod. `nanocam/photodb.py` can shrink the
+  synced library to about half of that (see [docs/firmware-notes.md](docs/firmware-notes.md),
+  section 28), but iTunes undoes it on the next photo sync.
+- `placeholders/iPod Photo Cache/` is made by iTunes and isn't committed.
+
 ## Linux is Required
 
 wInd3x's nano 5G exploit only works on native Linux. Your options are:
