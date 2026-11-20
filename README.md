@@ -44,6 +44,7 @@ folder, once:
 | [placeholders/200](placeholders/200) | 200 | about 125 MB | `slot_001.jpg` to `slot_200.jpg` |
 | [placeholders/500](placeholders/500) | 500 | about 305 MB | `slot_001.jpg` to `slot_500.jpg` |
 | [placeholders/1000](placeholders/1000) | 1000 | about 610 MB | `slot_0001.jpg` to `slot_1000.jpg` |
+| [placeholders/10000](placeholders/10000) | 10000 | about 6.1 GB | `slot_00001.jpg` to `slot_10000.jpg` |
 
 The stock Photos app then shows that many empty pictures. Each one reserves room for a
 full-size picture and a thumbnail (about 610 KB each before compacting). More placeholders
