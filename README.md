@@ -171,7 +171,10 @@ in [Raspberry Pi setup](#raspberry-pi-setup), and this repo (`git clone` it, or 
    scripts need the decrypted file, `n5g-retailos.dec`. You can copy it to another machine for
    step 2, or just do step 2 on the Pi.
 
-2. **Build the patched firmware.** Install the tools (see [Setup (Windows)](#setup-windows), or
+2. **Build the patched firmware.** On Windows the easy way is `nanocam-patcher.exe` (build it
+   with `scripts\build-exe.ps1`, or grab it from the Releases page if one is there): drag
+   `n5g-retailos.dec` onto it, or run it and answer the three questions (placeholder count,
+   next photo number, output file). It writes `nanocam.dfu` next to the input. Otherwise, install the tools (see [Setup (Windows)](#setup-windows), or
    on Linux `python3 -m venv .venv && source .venv/bin/activate && pip install -e .`), then:
 
    ```bash

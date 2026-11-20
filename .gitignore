@@ -12,3 +12,6 @@ placeholders/**/iPod Photo Cache/
 *.dec
 *.dfu
 firmware/
+
+build/
+dist/
