@@ -1,8 +1,8 @@
 ﻿# NanoCam (iPod Nano 5g)
 
 A proper photo camera mode for the iPod nano 5th generation, added to Apple's stock
-firmware. With the ability to view photos taken on the pod through the native Photos app!
-I've also been developing a nano 5g dark mode which is included in this build. 
+firmware. With the ability to view photos taken on the iPod through the native Photos app!
+I've also been developing a dark mode toggle which is included in this build.
 
 # Example Photos
 <img width="480" height="640" alt="PIC_0023" src="https://github.com/user-attachments/assets/42930aca-9ce2-4714-9cd8-1ec0f280127d" />
