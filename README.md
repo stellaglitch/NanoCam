@@ -1,4 +1,4 @@
-﻿# NanoCam
+﻿# NanoCam (iPod Nano 5g)
 
 A proper photo camera mode for the iPod nano 5th generation, added to Apple's stock
 firmware. With the ability to view photos taken on the pod through the native Photos app!
