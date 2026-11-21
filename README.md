@@ -5,10 +5,10 @@ firmware. With the ability to view photos taken on the iPod through the native P
 I've also been developing a dark mode toggle which is included in this build.
 
 # Example Photos
-<img width="480" height="640" alt="PIC_0023" src="https://github.com/user-attachments/assets/42930aca-9ce2-4714-9cd8-1ec0f280127d" />
-<img width="480" height="640" alt="cy66m75nhszh1" src="https://github.com/user-attachments/assets/80577572-71ca-4008-9101-0b5a7fe1d711" />
-<img width="480" height="640" alt="PIC_0018" src="https://github.com/user-attachments/assets/67a43a3c-5428-4e46-a7d6-0e1f6014d72b" />
-<img width="480" height="640" alt="0kgup75nhszh1" src="https://github.com/user-attachments/assets/8d5935e5-a033-43ca-bf22-9cc83e764432" />
+<img width="240" height="320" alt="PIC_0023" src="https://github.com/user-attachments/assets/42930aca-9ce2-4714-9cd8-1ec0f280127d" />
+<img width="240" height="320" alt="cy66m75nhszh1" src="https://github.com/user-attachments/assets/80577572-71ca-4008-9101-0b5a7fe1d711" />
+<img width="240" height="320" alt="PIC_0018" src="https://github.com/user-attachments/assets/67a43a3c-5428-4e46-a7d6-0e1f6014d72b" />
+<img width="240" height="320" alt="0kgup75nhszh1" src="https://github.com/user-attachments/assets/8d5935e5-a033-43ca-bf22-9cc83e764432" />
 
 ## How This Works
 
